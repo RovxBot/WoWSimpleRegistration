@@ -28,7 +28,7 @@
                                     <?php elang('rule'); ?> 1
                                 </p>
                                 <p>
-                                    <?php elang('edit_on'); ?> <b>"/template/advance/tpl/rules.php"</b>.
+                                    <?php elang('rule'); ?> 1
                                 </p>
                             </div>
                         </li>

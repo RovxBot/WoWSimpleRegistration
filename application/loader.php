@@ -41,6 +41,7 @@ if (get_config('debug_mode')) {
 
 require_once app_path . 'include/database.php';
 require_once app_path . 'include/user.php';
+require_once app_path . 'include/store.php';
 require_once app_path . 'include/vote.php';
 require_once app_path . 'include/status.php';
 

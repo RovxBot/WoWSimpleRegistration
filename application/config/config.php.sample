@@ -111,6 +111,15 @@ $config['vote_sites'] = array(
     // )
 );
 
+// Registration Access Control - Keep signups open or require a shared invite code.
+$config['allow_signup'] = true; // Set to false to close new registrations entirely.
+$config['invite_code'] = ''; // Shared secret invite code. Leave empty to disable invite gating.
+
+// Grim Token Shop - Services are loaded from a PHP catalog file, not from the auth database.
+$config['store_enabled'] = false; // Toggle the player login + Grim Token shop section.
+$config['store_token_item_id'] = 90000; // Item entry used as the Grim Token currency.
+$config['store_catalog_file'] = base_path . 'application/config/store-services.php'; // PHP file that returns the service catalog array.
+
 // Captcha Configuration - Choose the type of captcha to use for security purposes.
 $config['captcha_type'] = 0; // Options: 0 (Image Captcha), 1 (HCaptcha), 2 (ReCaptcha v2), 3 (Cloudflare Turnstile), or >3 (Disable captcha).
 $config['captcha_key'] = ''; // The site key for HCaptcha, Recaptcha, or Cloudflare Turnstile. Leave empty for image captcha.

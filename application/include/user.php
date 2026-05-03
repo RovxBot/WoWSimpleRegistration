@@ -64,6 +64,28 @@ class user
         }
     }
 
+    public static function is_signup_allowed()
+    {
+        global $config;
+
+        if (!is_array($config) || !array_key_exists('allow_signup', $config)) {
+            return true;
+        }
+
+        return !empty($config['allow_signup']);
+    }
+
+    public static function registration_requires_invite()
+    {
+        global $config;
+
+        if (!is_array($config) || !array_key_exists('invite_code', $config)) {
+            return false;
+        }
+
+        return trim((string) $config['invite_code']) !== '';
+    }
+
     /**
      * Battle.net registration
      * @return bool
@@ -100,6 +122,10 @@ class user
                 error_msg(lang('passwords_length'));
                 return false;
             }
+        }
+
+        if (!self::validate_registration_invite_code()) {
+            return false;
         }
 
         if (!self::check_email_exists(strtoupper($_POST["email"]))) {
@@ -251,6 +277,10 @@ class user
 
         if (!(strlen($_POST['username']) >= 2 && strlen($_POST['username']) <= 16)) {
             error_msg(lang('username_length'));
+            return false;
+        }
+
+        if (!self::validate_registration_invite_code()) {
             return false;
         }
 
@@ -847,6 +877,28 @@ class user
         return false;
     }
 
+    public static function get_user_by_id($userId)
+    {
+        $userId = (int) $userId;
+        if ($userId < 1) {
+            return false;
+        }
+
+        $queryBuilder = database::$auth->createQueryBuilder();
+        $queryBuilder->select('*')
+            ->from('account')
+            ->where('id = :id')
+            ->setParameter('id', $userId);
+
+        $statement = $queryBuilder->executeQuery();
+        $datas = $statement->fetchAllAssociative();
+        if (!empty($datas[0]['id'])) {
+            return $datas[0];
+        }
+
+        return false;
+    }
+
     /**
      * @param $username
      * @return bool
@@ -868,6 +920,102 @@ class user
             }
         }
         return false;
+    }
+
+    public static function validate_registration_invite_code()
+    {
+        if (!self::is_signup_allowed()) {
+            error_msg(lang_or('registration_closed', 'Registration is currently closed.'));
+            return false;
+        }
+
+        if (!self::registration_requires_invite()) {
+            return true;
+        }
+
+        if (empty($_POST['invite_code'])) {
+            error_msg(lang_or('invite_code_required', 'An invite code is required to register.'));
+            return false;
+        }
+
+        $inviteCode = trim((string) $_POST['invite_code']);
+        $configuredCode = trim((string) get_config('invite_code'));
+        if ($configuredCode === '' || !hash_equals($configuredCode, $inviteCode)) {
+            error_msg(lang_or('invite_code_invalid', 'The invite code is not valid.'));
+            return false;
+        }
+
+        $_POST['invite_code'] = $configuredCode;
+        return true;
+    }
+
+    public static function authenticate_normal_portal($username, $password)
+    {
+        $username = strtoupper(trim((string) $username));
+        if (!preg_match('/^[0-9A-Z-_]+$/', $username)) {
+            return false;
+        }
+
+        $userinfo = self::get_user_by_username($username);
+        if (empty($userinfo['id'])) {
+            return false;
+        }
+
+        if (empty(get_config('srp6_support'))) {
+            $hashedPass = strtoupper(sha1(strtoupper($userinfo['username'] . ':' . $password)));
+            if (strtoupper($userinfo['sha_pass_hash']) !== $hashedPass) {
+                return false;
+            }
+        } else {
+            if (!verifySRP6($userinfo['username'], $password, $userinfo[get_core_config("salt_field")], $userinfo[get_core_config("verifier_field")])) {
+                return false;
+            }
+        }
+
+        return $userinfo;
+    }
+
+    public static function authenticate_battlenet_portal($email, $password)
+    {
+        $email = strtoupper(trim((string) $email));
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return false;
+        }
+
+        $userinfo = self::get_user_by_email($email);
+        if (empty($userinfo['id'])) {
+            return false;
+        }
+
+        if (empty(get_config('srp6_support'))) {
+            $bnetAccountInfo = self::get_bnetaccount_by_email($email);
+            if (empty($bnetAccountInfo['id'])) {
+                return false;
+            }
+
+            $hashedPass = strtoupper(bin2hex(strrev(hex2bin(strtoupper(hash('sha256', strtoupper(hash('sha256', $email)) . ':' . strtoupper($password)))))));
+            if (strtoupper($bnetAccountInfo['sha_pass_hash']) !== $hashedPass) {
+                return false;
+            }
+        } else {
+            if (get_config('srp6_version') == 0) {
+                if (!verifySRP6($userinfo['username'], $password, $userinfo[get_core_config("salt_field")], $userinfo[get_core_config("verifier_field")])) {
+                    return false;
+                }
+            } elseif (get_config('srp6_version') == 1) {
+                $bnetAccountInfo = self::get_bnetaccount_by_email($email);
+                if (empty($bnetAccountInfo['id']) || !verifySRP6BnetV1($bnetAccountInfo['email'], $password, $bnetAccountInfo[get_core_config("salt_field")], $bnetAccountInfo[get_core_config("verifier_field")])) {
+                    return false;
+                }
+            } elseif (get_config('srp6_version') == 2) {
+                $bnetAccountInfo = self::get_bnetaccount_by_email($email);
+                if (empty($bnetAccountInfo['id']) || !verifySRP6BnetV2($bnetAccountInfo['email'], $password, $bnetAccountInfo[get_core_config("salt_field")], $bnetAccountInfo[get_core_config("verifier_field")])) {
+                    return false;
+                }
+            }
+        }
+
+        return $userinfo;
     }
 
     public static function get_online_players($realmID)

@@ -65,6 +65,9 @@
                                 src="<?php echo $antiXss->xss_clean(get_config("baseurl")); ?>/template/<?php echo $antiXss->xss_clean(get_config("template")); ?>/assets/img/logo.png"
                                 alt="" class="img-fluid"></a></li>
                 <li><a href="#register"><?php elang('register');  ?></a></li>
+                <?php if (store::is_enabled()) { ?>
+                <li><a href="#player-portal"><?php echo $antiXss->xss_clean(lang_or('grim_token_shop', 'Grim Token Shop')); ?></a></li>
+                <?php } ?>
                 <li><a href="#server-status"><?php elang('server_status');  ?></a></li>
                 <li><a href="#contact"><?php elang('contact');  ?></a></li>
                 <?php if(!empty(get_config('supported_langs'))) { ?>

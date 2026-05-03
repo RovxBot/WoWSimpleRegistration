@@ -202,6 +202,119 @@ function RemoteCommandWithSOAP($COMMAND)
     }
 }
 
+function RemoteCommandWithSOAPDetailed($COMMAND)
+{
+    if (empty($COMMAND)) {
+        return array(
+            'status' => 'failed',
+            'success' => false,
+            'output' => '',
+            'message' => 'Command is empty.',
+        );
+    }
+
+    try {
+        $conn = new SoapClient(NULL, array(
+            'location' => 'http://' . get_config('soap_host') . ':' . get_config('soap_port') . '/',
+            'uri' => get_config('soap_uri'),
+            'style' => get_config('soap_style'),
+            'login' => get_config('soap_username'),
+            'password' => get_config('soap_password'),
+            'exceptions' => true,
+        ));
+
+        $response = $conn->executeCommand(new SoapParam($COMMAND, 'command'));
+        unset($conn);
+
+        $output = is_string($response) ? trim($response) : '';
+        if (soap_command_output_looks_failed($output)) {
+            return array(
+                'status' => 'failed',
+                'success' => false,
+                'output' => $output,
+                'message' => $output !== '' ? $output : 'SOAP command failed.',
+            );
+        }
+
+        return array(
+            'status' => 'success',
+            'success' => true,
+            'output' => $output,
+            'message' => $output,
+        );
+    } catch (Throwable $exception) {
+        $message = trim((string) $exception->getMessage());
+        $status = soap_transport_error_is_ambiguous($message) ? 'unknown' : 'failed';
+
+        return array(
+            'status' => $status,
+            'success' => false,
+            'output' => '',
+            'message' => $message,
+        );
+    }
+}
+
+function soap_command_output_looks_failed($output)
+{
+    if ($output === '') {
+        return false;
+    }
+
+    $normalizedOutput = strtolower(trim((string) $output));
+    $failureHints = array(
+        'error',
+        'incorrect syntax',
+        'invalid',
+        'not found',
+        'not exist',
+        'no such',
+        'player does not exist',
+        'character does not exist',
+        'account does not exist',
+        'usage:',
+    );
+
+    foreach ($failureHints as $hint) {
+        if (strpos($normalizedOutput, $hint) !== false) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function soap_transport_error_is_ambiguous($message)
+{
+    if ($message === '') {
+        return true;
+    }
+
+    $normalizedMessage = strtolower($message);
+    $ambiguousHints = array(
+        'could not connect to host',
+        'connection refused',
+        'timed out',
+        'timeout',
+        'error fetching http headers',
+        'failed to open stream',
+        'network is unreachable',
+        'connection reset',
+        'connection aborted',
+        'transport',
+        'http',
+        'stream',
+    );
+
+    foreach ($ambiguousHints as $hint) {
+        if (strpos($normalizedMessage, $hint) !== false) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 function validate_hcaptcha()
 {
     if (empty($_POST['h-captcha-response'])) {
@@ -516,6 +629,16 @@ function lang($val)
         return $language[$val];
     }
     return "";
+}
+
+function lang_or($key, $fallback)
+{
+    $translated = lang($key);
+    if ($translated !== '') {
+        return $translated;
+    }
+
+    return $fallback;
 }
 
 // Echo language text

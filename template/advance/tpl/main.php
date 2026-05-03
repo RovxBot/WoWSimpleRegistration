@@ -11,6 +11,13 @@ require_once 'server-info.php';
 require_once 'how-connect.php';
 require_once 'rules.php';
 ?>
+<?php
+$pageAction = !empty($_POST['submit']) ? (string) $_POST['submit'] : '';
+$showRegistrationMessages = !store::is_portal_action($pageAction);
+$signupAllowed = user::is_signup_allowed();
+$registrationRequiresInvite = user::registration_requires_invite();
+$passwordMaxLength = (get_config('battlenet_support') && get_config('srp6_support') && get_config('srp6_version') == 2) ? 128 : 16;
+?>
 <section id="register" class="services">
     <div class="container">
         <div class="section-title" data-aos="fade-up">
@@ -19,44 +26,53 @@ require_once 'rules.php';
         </div>
         <div class="row">
             <div class="col-lg-6 order-2 order-lg-1">
-                <form action="<?php echo $antiXss->xss_clean(get_config("baseurl")); ?>/index.php#register"
-                    method="post">
-                    <div style="padding: 10px;" data-aos="fade-right" data-aos-delay="100">
-                        <?php error_msg();
-                        success_msg(); //Display message. ?>
+                <div style="padding: 10px;" data-aos="fade-right" data-aos-delay="100">
+                    <?php if ($showRegistrationMessages) {
+                        error_msg();
+                        success_msg();
+                    } ?>
+                    <?php if ($signupAllowed) { ?>
+                    <form action="<?php echo $antiXss->xss_clean(get_config("baseurl")); ?>/index.php#register" method="post">
                         <div class="input-group">
                             <span class="input-group"><?php elang('email'); ?></span>
-                            <input type="email" class="form-control" required placeholder="<?php elang('email'); ?>"
-                                name="email">
+                            <input type="email" class="form-control" required placeholder="<?php elang('email'); ?>" name="email">
                         </div>
                         <?php if (!get_config('battlenet_support')) { ?>
                         <div class="input-group">
                             <span class="input-group"><?php elang('username'); ?></span>
-                            <input type="text" class="form-control" pattern="[A-Za-z0-9]{2,16}" required
-                                placeholder="<?php elang('username'); ?>" name="username">
+                            <input type="text" class="form-control" pattern="[A-Za-z0-9]{2,16}" required placeholder="<?php elang('username'); ?>" name="username">
                         </div>
                         <?php } ?>
                         <div class="input-group">
                             <span class="input-group"><?php elang('password'); ?></span>
-                            <input type="password" class="form-control" minlength="4" maxlength="16" required
-                                placeholder="<?php elang('password'); ?>" name="password">
+                            <input type="password" class="form-control" minlength="4" maxlength="<?php echo $antiXss->xss_clean((string) $passwordMaxLength); ?>" required placeholder="<?php elang('password'); ?>" name="password">
                         </div>
                         <div class="input-group">
                             <span class="input-group"><?php elang('retype_password'); ?></span>
-                            <input type="password" class="form-control" minlength="4" maxlength="16" required
-                                placeholder="<?php elang('retype_password'); ?>" name="repassword">
+                            <input type="password" class="form-control" minlength="4" maxlength="<?php echo $antiXss->xss_clean((string) $passwordMaxLength); ?>" required placeholder="<?php elang('retype_password'); ?>" name="repassword">
                         </div>
+                        <?php if ($registrationRequiresInvite) { ?>
+                        <div class="input-group">
+                            <span class="input-group"><?php echo $antiXss->xss_clean(lang_or('invite_code', 'Invite Code')); ?></span>
+                            <input type="text" class="form-control" required placeholder="<?php echo $antiXss->xss_clean(lang_or('invite_code', 'Invite Code')); ?>" name="invite_code">
+                        </div>
+                        <?php } ?>
                         <?php echo GetCaptchaHTML(); ?>
                         <input name="submit" type="hidden" value="register">
-                        <div class="text-center" style="margin-top: 10px;"><input type="submit" class="btn btn-success"
-                                value="<?php elang('register'); ?>">
+                        <div class="text-center" style="margin-top: 10px;">
+                            <input type="submit" class="btn btn-success" value="<?php elang('register'); ?>">
                         </div>
+                    </form>
+                    <?php } else { ?>
+                    <div class="portal-panel registration-closed-panel">
+                        <h3><?php echo $antiXss->xss_clean(lang_or('registration_closed_title', 'Registration Closed')); ?></h3>
+                        <p><?php echo $antiXss->xss_clean(lang_or('registration_closed', 'Registration is currently closed.')); ?></p>
                     </div>
-                </form>
+                    <?php } ?>
+                </div>
                 <div class="text-center" data-aos="fade-up" data-aos-delay="100">
                     <?php if (empty(get_config('disable_changepassword'))) { ?>
-                    <button type="button" class="btn btn-primary" data-toggle="modal"
-                        data-target="#changepassword-modal">
+                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#changepassword-modal">
                         <?php elang('change_password'); ?>
                     </button>
                     <?php } ?>
@@ -75,45 +91,32 @@ require_once 'rules.php';
                         <div class="modal-content">
                             <div class="modal-header">
                                 <h4 class="modal-title"><?php elang('two_factor_authentication'); ?></h4>
-                                <button type="button" class="close" data-dismiss="modal">&times;
-                                </button>
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
                             </div>
                             <div class="modal-body">
-                                <form
-                                    action="<?php echo $antiXss->xss_clean(get_config("baseurl")); ?>/index.php#register"
-                                    method="post">
+                                <form action="<?php echo $antiXss->xss_clean(get_config("baseurl")); ?>/index.php#register" method="post">
                                     <div>
                                         <ul>
-                                            <li><?php elang('two_factor_authentication_tip1'); ?> <a
-                                                    href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2"
-                                                    target="_blank">Google Store</a> - <a
-                                                    href="https://apps.apple.com/app/google-authenticator/id388497605"
-                                                    target="_blank">Apple Store</a></li>
+                                            <li><?php elang('two_factor_authentication_tip1'); ?> <a href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2" target="_blank">Google Store</a> - <a href="https://apps.apple.com/app/google-authenticator/id388497605" target="_blank">Apple Store</a></li>
                                         </ul>
                                     </div>
                                     <div class="input-group">
                                         <span class="input-group"><?php elang('email'); ?></span>
-                                        <input type="email" class="form-control" placeholder="<?php elang('email'); ?>"
-                                            name="email">
+                                        <input type="email" class="form-control" placeholder="<?php elang('email'); ?>" name="email">
                                     </div>
                                     <?php if (empty(get_config('battlenet_support'))) { ?>
                                     <div class="input-group">
                                         <span class="input-group"><?php elang('username'); ?></span>
-                                        <input type="text" class="form-control"
-                                            placeholder="<?php elang('username'); ?>" name="username">
+                                        <input type="text" class="form-control" placeholder="<?php elang('username'); ?>" name="username">
                                     </div>
-                                    <?php }
-                                        echo GetCaptchaHTML(); ?>
+                                    <?php } ?>
+                                    <?php echo GetCaptchaHTML(); ?>
                                     <input name="submit" type="hidden" value="etfa">
-                                    <div class="text-center" style="margin-top: 10px;"><input type="submit"
-                                            class="btn btn-primary"
-                                            value="<?php elang('two_factor_authentication_enable'); ?>"></div>
+                                    <div class="text-center" style="margin-top: 10px;"><input type="submit" class="btn btn-primary" value="<?php elang('two_factor_authentication_enable'); ?>"></div>
                                 </form>
                             </div>
                             <div class="modal-footer">
-                                <button type="button" class="btn btn-danger" data-dismiss="modal">
-                                    <?php elang('close'); ?>
-                                </button>
+                                <button type="button" class="btn btn-danger" data-dismiss="modal"><?php elang('close'); ?></button>
                             </div>
                         </div>
                     </div>
@@ -130,43 +133,36 @@ require_once 'rules.php';
                         <div class="modal-content">
                             <div class="modal-header">
                                 <h4 class="modal-title"><?php elang('vote'); ?></h4>
-                                <button type="button" class="close" data-dismiss="modal">&times;
-                                </button>
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
                             </div>
                             <div class="modal-body">
-                                <form
-                                    action="<?php echo $antiXss->xss_clean(get_config("baseurl")); ?>/index.php#register"
-                                    method="post" target="_blank">
+                                <form action="<?php echo $antiXss->xss_clean(get_config("baseurl")); ?>/index.php#register" method="post" target="_blank">
                                     <?php if (get_config('battlenet_support')) { ?>
                                     <div class="input-group">
                                         <span class="input-group"><?php elang('email'); ?></span>
-                                        <input type="email" class="form-control" placeholder="<?php elang('email'); ?>"
-                                            name="account">
+                                        <input type="email" class="form-control" placeholder="<?php elang('email'); ?>" name="account">
                                     </div>
                                     <?php } else { ?>
                                     <div class="input-group">
                                         <span class="input-group"><?php elang('username'); ?></span>
-                                        <input type="text" class="form-control"
-                                            placeholder="<?php elang('username'); ?>" name="account">
+                                        <input type="text" class="form-control" placeholder="<?php elang('username'); ?>" name="account">
                                     </div>
                                     <?php } ?>
                                     <div class="text-center" style="margin-top: 10px;">
                                         <?php
-                                            $vote_sites = get_config('vote_sites');
-                                            if (!empty($vote_sites)) {
-                                                foreach ($vote_sites as $siteID => $vote_site) {
-                                                    $tmp_id = $siteID + 1;
-                                                    echo '<button type="submit" name="siteid" value="' . $tmp_id . '" style="border:none; background-color: transparent;"><img src="' . $vote_site['image'] . '"></button>';
-                                                }
+                                        $vote_sites = get_config('vote_sites');
+                                        if (!empty($vote_sites)) {
+                                            foreach ($vote_sites as $siteID => $vote_site) {
+                                                $tmp_id = $siteID + 1;
+                                                echo '<button type="submit" name="siteid" value="' . $tmp_id . '" style="border:none; background-color: transparent;"><img src="' . $vote_site['image'] . '"></button>';
                                             }
-                                            ?>
+                                        }
+                                        ?>
                                     </div>
                                 </form>
                             </div>
                             <div class="modal-footer">
-                                <button type="button" class="btn btn-danger" data-dismiss="modal">
-                                    <?php elang('close'); ?>
-                                </button>
+                                <button type="button" class="btn btn-danger" data-dismiss="modal"><?php elang('close'); ?></button>
                             </div>
                         </div>
                     </div>
@@ -177,36 +173,28 @@ require_once 'rules.php';
                         <div class="modal-content">
                             <div class="modal-header">
                                 <h4 class="modal-title"><?php elang('restore_password'); ?></h4>
-                                <button type="button" class="close" data-dismiss="modal">&times;
-                                </button>
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
                             </div>
                             <div class="modal-body">
-                                <form
-                                    action="<?php echo $antiXss->xss_clean(get_config("baseurl")); ?>/index.php#register"
-                                    method="post">
+                                <form action="<?php echo $antiXss->xss_clean(get_config("baseurl")); ?>/index.php#register" method="post">
                                     <?php if (get_config('battlenet_support')) { ?>
                                     <div class="input-group">
                                         <span class="input-group"><?php elang('email'); ?></span>
-                                        <input type="email" class="form-control" placeholder="<?php elang('email'); ?>"
-                                            name="email">
+                                        <input type="email" class="form-control" placeholder="<?php elang('email'); ?>" name="email">
                                     </div>
                                     <?php } else { ?>
                                     <div class="input-group">
                                         <span class="input-group"><?php elang('username'); ?></span>
-                                        <input type="text" class="form-control"
-                                            placeholder="<?php elang('username'); ?>" name="username">
+                                        <input type="text" class="form-control" placeholder="<?php elang('username'); ?>" name="username">
                                     </div>
-                                    <?php }
-                                    echo GetCaptchaHTML(); ?>
+                                    <?php } ?>
+                                    <?php echo GetCaptchaHTML(); ?>
                                     <input name="submit" type="hidden" value="restorepassword">
-                                    <div class="text-center" style="margin-top: 10px;"><input type="submit"
-                                            class="btn btn-primary" value="<?php elang('restore_password'); ?>"></div>
+                                    <div class="text-center" style="margin-top: 10px;"><input type="submit" class="btn btn-primary" value="<?php elang('restore_password'); ?>"></div>
                                 </form>
                             </div>
                             <div class="modal-footer">
-                                <button type="button" class="btn btn-danger" data-dismiss="modal">
-                                    <?php elang('close'); ?>
-                                </button>
+                                <button type="button" class="btn btn-danger" data-dismiss="modal"><?php elang('close'); ?></button>
                             </div>
                         </div>
                     </div>
@@ -216,62 +204,224 @@ require_once 'rules.php';
                         <div class="modal-content">
                             <div class="modal-header">
                                 <h4 class="modal-title"><?php elang('change_password'); ?></h4>
-                                <button type="button" class="close" data-dismiss="modal">&times;
-                                </button>
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
                             </div>
                             <div class="modal-body">
-                                <form
-                                    action="<?php echo $antiXss->xss_clean(get_config("baseurl")); ?>/index.php#register"
-                                    method="post">
+                                <form action="<?php echo $antiXss->xss_clean(get_config("baseurl")); ?>/index.php#register" method="post">
                                     <?php if (get_config('battlenet_support')) { ?>
                                     <div class="input-group">
                                         <span class="input-group"><?php elang('email'); ?></span>
-                                        <input type="email" class="form-control" placeholder="<?php elang('email'); ?>"
-                                            name="email">
+                                        <input type="email" class="form-control" placeholder="<?php elang('email'); ?>" name="email">
                                     </div>
                                     <?php } else { ?>
                                     <div class="input-group">
                                         <span class="input-group"><?php elang('username'); ?></span>
-                                        <input type="text" class="form-control"
-                                            placeholder="<?php elang('username'); ?>" name="username">
+                                        <input type="text" class="form-control" placeholder="<?php elang('username'); ?>" name="username">
                                     </div>
                                     <?php } ?>
                                     <div class="input-group">
                                         <span class="input-group"><?php elang('old_password'); ?></span>
-                                        <input type="password" class="form-control"
-                                            placeholder=<?php elang('old_password'); ?>" name="old_password">
+                                        <input type="password" class="form-control" placeholder="<?php elang('old_password'); ?>" name="old_password">
                                     </div>
                                     <div class="input-group">
                                         <span class="input-group"><?php elang('password'); ?></span>
-                                        <input type="password" class="form-control"
-                                            placeholder="<?php elang('password'); ?>" name="password">
+                                        <input type="password" class="form-control" placeholder="<?php elang('password'); ?>" name="password">
                                     </div>
                                     <div class="input-group">
                                         <span class="input-group"><?php elang('retype_password'); ?></span>
-                                        <input type="password" class="form-control"
-                                            placeholder="<?php elang('retype_password'); ?>" name="repassword">
+                                        <input type="password" class="form-control" placeholder="<?php elang('retype_password'); ?>" name="repassword">
                                     </div>
                                     <?php echo GetCaptchaHTML(); ?>
                                     <input name="submit" type="hidden" value="changepass">
-                                    <div class="text-center" style="margin-top: 10px;"><input type="submit"
-                                            class="btn btn-primary" value="<?php elang('change_password'); ?>"></div>
+                                    <div class="text-center" style="margin-top: 10px;"><input type="submit" class="btn btn-primary" value="<?php elang('change_password'); ?>"></div>
                                 </form>
                             </div>
                             <div class="modal-footer">
-                                <button type="button" class="btn btn-danger" data-dismiss="modal">
-                                    <?php elang('close'); ?>
-                                </button>
+                                <button type="button" class="btn btn-danger" data-dismiss="modal"><?php elang('close'); ?></button>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="image col-lg-6 order-1 order-lg-2"
-                style='background-image: url("<?php echo $antiXss->xss_clean(get_config("baseurl")); ?>/template/<?php echo $antiXss->xss_clean(get_config("template")); ?>/assets/img/demonhunter.png");background-size: auto 100%;background-position: center;background-repeat: no-repeat;'
-                data-aos="fade-left" data-aos-delay="100"></div>
+            <div class="image col-lg-6 order-1 order-lg-2" style='background-image: url("<?php echo $antiXss->xss_clean(get_config("baseurl")); ?>/template/<?php echo $antiXss->xss_clean(get_config("template")); ?>/assets/img/demonhunter.png");background-size: auto 100%;background-position: center;background-repeat: no-repeat;' data-aos="fade-left" data-aos-delay="100"></div>
         </div>
     </div>
 </section>
+<?php if (store::is_enabled()) {
+    $portalAccount = store::get_portal_account();
+    $portalLoggedIn = is_array($portalAccount) && !empty($portalAccount['id']);
+    $tokenSummary = $portalLoggedIn ? store::get_account_token_summary($portalAccount) : array(
+        'total' => 0,
+        'has_online_character' => false,
+        'characters' => array(),
+    );
+    $catalog = store::get_catalog();
+    $recentOrders = $portalLoggedIn ? store::get_recent_orders($portalAccount, 8) : array();
+?>
+<section id="player-portal" class="services section-bg">
+    <div class="container">
+        <div class="section-title" data-aos="fade-up">
+            <h2><?php echo $antiXss->xss_clean(lang_or('player_portal', 'Player Portal')); ?></h2>
+            <p><?php echo $antiXss->xss_clean(lang_or('store_intro_text', 'Log in with your game account to access the Grim Token shop.')); ?></p>
+        </div>
+        <div class="row">
+            <div class="col-lg-5" data-aos="fade-right" data-aos-delay="100">
+                <div class="portal-panel">
+                    <h3><?php echo $antiXss->xss_clean(lang_or('player_login', 'Player Login')); ?></h3>
+                    <?php if (store::is_portal_action($pageAction)) {
+                        error_msg();
+                        success_msg();
+                    } ?>
+                    <?php if (!$portalLoggedIn) { ?>
+                    <form action="<?php echo $antiXss->xss_clean(get_config("baseurl")); ?>/index.php#player-portal" method="post">
+                        <?php if (get_config('battlenet_support')) { ?>
+                        <div class="input-group">
+                            <span class="input-group"><?php elang('email'); ?></span>
+                            <input type="email" class="form-control" required placeholder="<?php elang('email'); ?>" name="email">
+                        </div>
+                        <?php } else { ?>
+                        <div class="input-group">
+                            <span class="input-group"><?php elang('username'); ?></span>
+                            <input type="text" class="form-control" required placeholder="<?php elang('username'); ?>" name="username">
+                        </div>
+                        <?php } ?>
+                        <div class="input-group">
+                            <span class="input-group"><?php elang('password'); ?></span>
+                            <input type="password" class="form-control" required placeholder="<?php elang('password'); ?>" name="password">
+                        </div>
+                        <input name="submit" type="hidden" value="<?php echo $antiXss->xss_clean(store::ACTION_LOGIN); ?>">
+                        <div class="text-center" style="margin-top: 10px;">
+                            <input type="submit" class="btn btn-primary" value="<?php echo $antiXss->xss_clean(lang_or('player_login', 'Player Login')); ?>">
+                        </div>
+                    </form>
+                    <p class="portal-note" style="margin-top: 20px;"><?php echo $antiXss->xss_clean(lang_or('store_login_required', 'Log in with your player account to view your store balance and catalog.')); ?></p>
+                    <?php } else { ?>
+                    <div class="portal-account-meta">
+                        <p><strong><?php echo $antiXss->xss_clean(lang_or('account', 'Account')); ?>:</strong> <?php echo $antiXss->xss_clean($portalAccount['username']); ?></p>
+                        <p><strong><?php echo $antiXss->xss_clean(lang_or('email', 'Email')); ?>:</strong> <?php echo $antiXss->xss_clean(strtolower($portalAccount['email'])); ?></p>
+                        <p><strong><?php echo $antiXss->xss_clean(lang_or('grim_token_total', 'Grim Token Total')); ?>:</strong> <?php echo $antiXss->xss_clean((string) $tokenSummary['total']); ?></p>
+                    </div>
+                    <div class="portal-requirement">
+                        <?php echo $antiXss->xss_clean(lang_or('store_characters_must_be_offline', 'All characters on this account must be offline before using the Grim Token shop.')); ?>
+                    </div>
+                    <div class="portal-character-list">
+                        <?php foreach ($tokenSummary['characters'] as $character) { ?>
+                        <div class="portal-character-row">
+                            <div>
+                                <strong><?php echo $antiXss->xss_clean($character['name']); ?></strong>
+                                <span><?php echo $antiXss->xss_clean(lang_or('level', 'Level')); ?> <?php echo $antiXss->xss_clean((string) $character['level']); ?></span>
+                            </div>
+                            <div class="portal-character-meta">
+                                <span class="portal-character-badge<?php echo !empty($character['online']) ? ' is-online' : ''; ?>">
+                                    <?php echo $antiXss->xss_clean(!empty($character['online']) ? lang_or('online', 'Online') : lang_or('offline', 'Offline')); ?>
+                                </span>
+                                <span class="portal-character-tokens"><?php echo $antiXss->xss_clean((string) $character['grim_tokens']); ?> <?php echo $antiXss->xss_clean(lang_or('grim_tokens', 'Grim Tokens')); ?></span>
+                            </div>
+                        </div>
+                        <?php } ?>
+                    </div>
+                    <form action="<?php echo $antiXss->xss_clean(get_config("baseurl")); ?>/index.php#player-portal" method="post">
+                        <input name="submit" type="hidden" value="<?php echo $antiXss->xss_clean(store::ACTION_LOGOUT); ?>">
+                        <div class="text-center" style="margin-top: 18px;">
+                            <input type="submit" class="btn btn-outline-secondary" value="<?php echo $antiXss->xss_clean(lang_or('logout', 'Logout')); ?>">
+                        </div>
+                    </form>
+                    <?php } ?>
+                </div>
+            </div>
+            <div class="col-lg-7" data-aos="fade-left" data-aos-delay="100">
+                <div class="portal-panel">
+                    <h3><?php echo $antiXss->xss_clean(lang_or('grim_token_shop', 'Grim Token Shop')); ?></h3>
+                    <?php if (!$portalLoggedIn) { ?>
+                    <p class="portal-note"><?php echo $antiXss->xss_clean(lang_or('store_login_required', 'Log in with your player account to view your store balance and catalog.')); ?></p>
+                    <?php } else { ?>
+                    <div class="store-balance-card">
+                        <span class="store-balance-label"><?php echo $antiXss->xss_clean(lang_or('grim_token_total', 'Grim Token Total')); ?></span>
+                        <strong class="store-balance-value"><?php echo $antiXss->xss_clean((string) $tokenSummary['total']); ?></strong>
+                    </div>
+                    <?php if (!empty($tokenSummary['has_online_character'])) { ?>
+                    <div class="portal-warning">
+                        <?php echo $antiXss->xss_clean(lang_or('store_online_blocked', 'Checkout is blocked while any character on this account is online.')); ?>
+                    </div>
+                    <?php } ?>
+                    <?php if (empty($catalog)) { ?>
+                    <p class="portal-note"><?php echo $antiXss->xss_clean(lang_or('store_no_services', 'No Grim Token services are configured right now.')); ?></p>
+                    <?php } else { ?>
+                    <div class="row store-grid">
+                        <?php foreach ($catalog as $service) {
+                            $serviceDisabled = !empty($tokenSummary['has_online_character']) || $tokenSummary['total'] < $service['price'];
+                            if ($service['scope'] === 'character' && empty($tokenSummary['characters'])) {
+                                $serviceDisabled = true;
+                            }
+                        ?>
+                        <div class="col-md-6">
+                            <div class="store-item-card">
+                                <div class="store-item-price"><?php echo $antiXss->xss_clean((string) $service['price']); ?> <?php echo $antiXss->xss_clean(lang_or('grim_tokens', 'Grim Tokens')); ?></div>
+                                <h4><?php echo $antiXss->xss_clean($service['title']); ?></h4>
+                                <?php if ($service['description'] !== '') { ?>
+                                <p><?php echo $antiXss->xss_clean($service['description']); ?></p>
+                                <?php } ?>
+                                <form action="<?php echo $antiXss->xss_clean(get_config("baseurl")); ?>/index.php#player-portal" method="post">
+                                    <?php if ($service['scope'] === 'character') { ?>
+                                    <div class="input-group store-form-group">
+                                        <span class="input-group"><?php echo $antiXss->xss_clean(lang_or('character', 'Character')); ?></span>
+                                        <select class="form-control" name="target_character_guid" required>
+                                            <option value=""><?php echo $antiXss->xss_clean(lang_or('choose_character', 'Choose a character')); ?></option>
+                                            <?php foreach ($tokenSummary['characters'] as $character) { ?>
+                                            <option value="<?php echo $antiXss->xss_clean((string) $character['guid']); ?>">
+                                                <?php echo $antiXss->xss_clean($character['name'] . ' - ' . lang_or('level', 'Level') . ' ' . $character['level']); ?>
+                                            </option>
+                                            <?php } ?>
+                                        </select>
+                                    </div>
+                                    <?php } ?>
+                                    <input name="submit" type="hidden" value="<?php echo $antiXss->xss_clean(store::ACTION_CHECKOUT); ?>">
+                                    <input name="service_id" type="hidden" value="<?php echo $antiXss->xss_clean($service['id']); ?>">
+                                    <button type="submit" class="btn btn-success btn-block" <?php echo $serviceDisabled ? 'disabled' : ''; ?>>
+                                        <?php echo $antiXss->xss_clean(lang_or('purchase_service', 'Purchase Service')); ?>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        <?php } ?>
+                    </div>
+                    <?php } ?>
+                    <?php if (!empty($recentOrders)) { ?>
+                    <div class="store-orders">
+                        <h4><?php echo $antiXss->xss_clean(lang_or('recent_orders', 'Recent Orders')); ?></h4>
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th><?php echo $antiXss->xss_clean(lang_or('service', 'Service')); ?></th>
+                                        <th><?php echo $antiXss->xss_clean(lang_or('character', 'Character')); ?></th>
+                                        <th><?php echo $antiXss->xss_clean(lang_or('cost', 'Cost')); ?></th>
+                                        <th><?php echo $antiXss->xss_clean(lang_or('status', 'Status')); ?></th>
+                                        <th><?php echo $antiXss->xss_clean(lang_or('date', 'Date')); ?></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($recentOrders as $order) { ?>
+                                    <tr>
+                                        <td><?php echo $antiXss->xss_clean($order['service_title']); ?></td>
+                                        <td><?php echo $antiXss->xss_clean($order['target_character_name'] ?: lang_or('store_account_scope', 'Account')); ?></td>
+                                        <td><?php echo $antiXss->xss_clean((string) $order['token_cost']); ?></td>
+                                        <td><span class="store-status-badge <?php echo $antiXss->xss_clean(store::get_order_status_badge_class($order['status'])); ?>"><?php echo $antiXss->xss_clean(store::get_order_status_label($order['status'])); ?></span></td>
+                                        <td><?php echo $antiXss->xss_clean((string) $order['created_at']); ?></td>
+                                    </tr>
+                                    <?php } ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <?php } ?>
+                    <?php } ?>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<?php } ?>
 <section id="server-status" class="contact section-bg">
     <div class="container">
         <div class="section-title" data-aos="fade-up" data-aos-delay="100">
