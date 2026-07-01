@@ -31,7 +31,7 @@
                             <li><i class="bx bx-check-double"></i><?php elang('start_level'); ?>: <b>1</b></li>
                             <li><i class="bx bx-check-double"></i><?php elang('max_level'); ?>: <b>80</b></li>
                             <li><i class="bx bx-check-double"></i><?php echo $antiXss->xss_clean(lang_or('grim_token_shop', 'Grim Token Shop')); ?>: <b>Character services</b></li>
-                            <li><i class="bx bx-check-double"></i><?php echo $antiXss->xss_clean(lang_or('registration_closed_title', 'Registration')); ?>: <b>Invite code required</b></li>
+                            <li><i class="bx bx-check-double"></i>Registration: <b>Invite code required</b></li>
                         </ul>
                     </div>
                 </div>
