@@ -6,14 +6,15 @@
  * Date: 04/02/2020 - 6:55 PM
  */
 ?>
+<?php $showServerData = !get_config('disable_online_players') || !get_config('disable_top_players'); ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <title><?php echo $antiXss->xss_clean(get_config("page_title")); ?></title>
-    <meta content="" name="descriptison">
-    <meta content="" name="keywords">
+    <meta content="Grim Guzzler WotLK 3.3.5a registration, player portal, and realm status." name="description">
+    <meta content="Grim Guzzler,WotLK,3.3.5a,AzerothCore,Wrath of the Lich King" name="keywords">
     <link href="<?php echo $antiXss->xss_clean(get_config("baseurl")); ?>/favicon.ICO" rel="icon">
     <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Montserrat:300,300i,400,400i,500,500i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i"
           rel="stylesheet">
@@ -68,7 +69,9 @@
                 <?php if (store::is_enabled()) { ?>
                 <li><a href="#player-portal"><?php echo $antiXss->xss_clean(lang_or('grim_token_shop', 'Grim Token Shop')); ?></a></li>
                 <?php } ?>
+                <?php if ($showServerData) { ?>
                 <li><a href="#server-status"><?php elang('server_status');  ?></a></li>
+                <?php } ?>
                 <li><a href="#contact"><?php elang('contact');  ?></a></li>
                 <?php if(!empty(get_config('supported_langs'))) { ?>
                     <li><a class="nav-item nav-link" id="nav-contact-tab" data-toggle="modal" data-target="#lang-modal"

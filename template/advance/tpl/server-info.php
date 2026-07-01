@@ -24,15 +24,14 @@
                     <div class="content pt-4 pt-lg-0 pl-0 pl-lg-3 ">
                         <h3><?php elang('server_information'); ?>:</h3>
                         <ul>
-                            <li><i class="bx bx-check-double"></i><?php elang('server_type'); ?>: <b>Blizzlike</b></li>
-                            <li><i class="bx bx-check-double"></i><?php elang('server_uptime'); ?>: <b>99.9%</b></li>
+                            <li><i class="bx bx-check-double"></i><?php elang('server_type'); ?>: <b>AzerothCore WotLK</b></li>
+                            <li><i class="bx bx-check-double"></i><?php elang('realmlist'); ?>: <b><?php echo $antiXss->xss_clean(strtoupper(get_config('realmlist'))); ?></b></li>
                             <li><i class="bx bx-check-double"></i><?php elang('xp_rate'); ?>: <b>x1 with double XP weekends</b></li>
                             <li><i class="bx bx-check-double"></i><?php elang('drop_rate'); ?>: <b>x1</b></li>
                             <li><i class="bx bx-check-double"></i><?php elang('start_level'); ?>: <b>1</b></li>
                             <li><i class="bx bx-check-double"></i><?php elang('max_level'); ?>: <b>80</b></li>
-                            <li><i class="bx bx-check-double"></i><?php elang('fixed_spells'); ?>: <b>99%</b></li>
-                            <li><i class="bx bx-check-double"></i><?php elang('fixed_dungeons'); ?>: <b>99%</b></li>
-                            <li><i class="bx bx-check-double"></i><?php elang('fixed_instances'); ?>: <b>99%</b></li>
+                            <li><i class="bx bx-check-double"></i><?php echo $antiXss->xss_clean(lang_or('grim_token_shop', 'Grim Token Shop')); ?>: <b>Character services</b></li>
+                            <li><i class="bx bx-check-double"></i><?php echo $antiXss->xss_clean(lang_or('registration_closed_title', 'Registration')); ?>: <b>Invite code required</b></li>
                         </ul>
                     </div>
                 </div>

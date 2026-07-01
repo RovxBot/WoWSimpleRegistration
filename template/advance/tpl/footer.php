@@ -10,21 +10,14 @@
 <footer id="footer">
     <div class="footer-top">
         <div class="container">
-            <div class="social-links" data-aos="fade-up" data-aos-delay="100">
-                <a href="#" class="twitter"><i class="bx bxl-twitter"></i></a>
-                <a href="#" class="facebook"><i class="bx bxl-facebook"></i></a>
-                <a href="#" class="instagram"><i class="bx bxl-instagram"></i></a>
-                <a href="#" class="google-plus"><i class="bx bxl-skype"></i></a>
+            <div class="credits" data-aos="fade-up" data-aos-delay="100">
+                Grim Guzzler - <?php echo $antiXss->xss_clean(get_config('game_version')); ?>
             </div>
         </div>
     </div>
     <div class="container footer-bottom clearfix">
         <div class="credits">
-            Developed by <a href="http://masterking32.com">MasterkinG32.CoM</a>
-            - <?php echo "Load " . (new SebastianBergmann\Timer\ResourceUsageFormatter)->resourceUsageSinceStartOfRequest(); ?>
-            <BR>
-            Tempelate Designed by <a href="https://bootstrapmade.com/">BootstrapMade</a> and Modified by <a
-                    href="http://masterking32.com">Amin.MasterkinG</a>
+            <?php echo "Load " . (new SebastianBergmann\Timer\ResourceUsageFormatter)->resourceUsageSinceStartOfRequest(); ?>
         </div>
     </div>
 </footer>

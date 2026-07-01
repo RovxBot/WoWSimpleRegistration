@@ -19,38 +19,34 @@
                 <div class="accordion-list">
                     <ul>
                         <li data-aos="fade-up" data-aos-delay="100">
-                            <a data-toggle="collapse" class="collapse" href="#accordion-list-1"><span>01</span> <?php elang('rule'); ?>
-                                1<i
+                            <a data-toggle="collapse" class="collapse" href="#accordion-list-1"><span>01</span> Be decent to other players<i
                                         class="bx bx-chevron-down icon-show"></i><i
                                         class="bx bx-chevron-up icon-close"></i></a>
                             <div id="accordion-list-1" class="collapse show" data-parent=".accordion-list">
                                 <p>
-                                    <?php elang('rule'); ?> 1
-                                </p>
-                                <p>
-                                    <?php elang('rule'); ?> 1
+                                    Keep chat, grouping, trading, and world PvP respectful. Harassment, hate speech, impersonation, and griefing are not welcome on Grim Guzzler.
                                 </p>
                             </div>
                         </li>
                         <li data-aos="fade-up" data-aos-delay="200">
                             <a data-toggle="collapse" href="#accordion-list-2" class="collapsed"><span>02</span>
-                                <?php elang('rule'); ?> 2<i
+                                Play fair<i
                                         class="bx bx-chevron-down icon-show"></i><i
                                         class="bx bx-chevron-up icon-close"></i></a>
                             <div id="accordion-list-2" class="collapse" data-parent=".accordion-list">
                                 <p>
-                                    <?php elang('rule'); ?> 2
+                                    Do not exploit bugs, automate gameplay, trade real money for services, or abuse account systems. Report broken quests, items, and economy issues instead of farming them.
                                 </p>
                             </div>
                         </li>
                         <li data-aos="fade-up" data-aos-delay="300">
                             <a data-toggle="collapse" href="#accordion-list-3" class="collapsed"><span>03</span>
-                                <?php elang('rule'); ?> 3<i
+                                Protect your account<i
                                         class="bx bx-chevron-down icon-show"></i><i
                                         class="bx bx-chevron-up icon-close"></i></a>
                             <div id="accordion-list-3" class="collapse" data-parent=".accordion-list">
                                 <p>
-                                    <?php elang('rule'); ?> 3
+                                    Use a unique password, keep your invite code private, and make sure every character is offline before using Grim Token services.
                                 </p>
                             </div>
                         </li>

@@ -17,6 +17,9 @@ $showRegistrationMessages = !store::is_portal_action($pageAction);
 $signupAllowed = user::is_signup_allowed();
 $registrationRequiresInvite = user::registration_requires_invite();
 $passwordMaxLength = (get_config('battlenet_support') && get_config('srp6_support') && get_config('srp6_version') == 2) ? 128 : 16;
+$showOnlinePlayers = !get_config('disable_online_players');
+$showTopPlayers = !get_config('disable_top_players');
+$showServerData = $showOnlinePlayers || $showTopPlayers;
 ?>
 <section id="register" class="services">
     <div class="container">
@@ -40,7 +43,7 @@ $passwordMaxLength = (get_config('battlenet_support') && get_config('srp6_suppor
                         <?php if (!get_config('battlenet_support')) { ?>
                         <div class="input-group">
                             <span class="input-group"><?php elang('username'); ?></span>
-                            <input type="text" class="form-control" pattern="[A-Za-z0-9]{2,16}" required placeholder="<?php elang('username'); ?>" name="username">
+                            <input type="text" class="form-control" pattern="[A-Za-z0-9_-]{2,16}" required placeholder="<?php elang('username'); ?>" name="username">
                         </div>
                         <?php } ?>
                         <div class="input-group">
@@ -422,15 +425,17 @@ $passwordMaxLength = (get_config('battlenet_support') && get_config('srp6_suppor
     </div>
 </section>
 <?php } ?>
+<?php if ($showServerData) { ?>
 <section id="server-status" class="contact section-bg">
     <div class="container">
         <div class="section-title" data-aos="fade-up" data-aos-delay="100">
             <h2><?php elang('server_status'); ?></h2>
-            <p><?php elang('online_players'); ?>:</p>
+            <p><?php echo $antiXss->xss_clean(lang_or('live_server_data', 'Live Realm Data')); ?></p>
         </div>
+        <?php if ($showOnlinePlayers) { ?>
         <div class="row" data-aos="fade-up" data-aos-delay="100">
             <div class="col-lg-12 text-center" style="margin-top: -30px;">
-                <?php if (!get_config('disable_online_players')) {
+                <?php
                     foreach (get_config('realmlists') as $onerealm_key => $onerealm) {
                         echo "<p><span style='color: #005cbf;font-weight: bold;'>{$onerealm['realmname']}</span> <span style='font-size: 12px;'>(" . lang('online_players_msg1') . " " . user::get_online_players_count($onerealm['realmid']) . ")</span></p><hr>";
                         $online_chars = user::get_online_players($onerealm['realmid']);
@@ -445,15 +450,17 @@ $passwordMaxLength = (get_config('battlenet_support') && get_config('srp6_suppor
                         }
                         echo "<hr>";
                     }
-                } ?>
+                ?>
             </div>
         </div>
+        <?php } ?>
+        <?php if ($showTopPlayers) { ?>
         <div class="section-title" data-aos="fade-up" data-aos-delay="100">
             <h2><?php elang('top_players'); ?></h2>
         </div>
         <div class="row">
             <div class="col-lg-12 text-center" style="margin-top: -30px;">
-                <?php if (!get_config('disable_top_players')) {
+                <?php
                     $i = 1;
                     foreach (get_config('realmlists') as $onerealm_key => $onerealm) {
                         echo "<h6 style='color: #005cbf;font-weight: bold;'>{$onerealm['realmname']}</h6><hr>";
@@ -591,11 +598,13 @@ $passwordMaxLength = (get_config('battlenet_support') && get_config('srp6_suppor
                         $i++;
                         echo "<hr>";
                     }
-                } ?>
+                ?>
             </div>
         </div>
+        <?php } ?>
     </div>
 </section>
+<?php } ?>
 <?php
 require_once 'faq.php';
 require_once 'contact.php';
