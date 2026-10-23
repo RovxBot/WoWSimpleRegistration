@@ -38,6 +38,7 @@ require_once 'header.php'; ?>
                     <div class="row">
                         <div class="col-md-6">
                             <form action="" method="post">
+                                <?php echo csrf_field(); ?>
                                 <div style="padding: 10px;">
                                     <?php error_msg();
                                     success_msg(); //Display message. ?>
@@ -103,6 +104,7 @@ require_once 'header.php'; ?>
                                                 <div class="modal-body">
                                                     <form action="<?php echo $antiXss->xss_clean(get_config("baseurl")); ?>/index.php#register"
                                                           method="post">
+                                                              <?php echo csrf_field(); ?>
                                                         <div>
                                                             <ul>
                                                                 <li><?php elang('two_factor_authentication_tip1'); ?> <a href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2" target="_blank">Google Store</a> - <a href="https://apps.apple.com/app/google-authenticator/id388497605" target="_blank">Apple Store</a></li>
@@ -154,6 +156,7 @@ require_once 'header.php'; ?>
                                                 <div class="modal-body">
                                                     <form action="<?php echo $antiXss->xss_clean(get_config("baseurl")); ?>/index.php#register"
                                                           method="post" target="_blank">
+                                                              <?php echo csrf_field(); ?>
                                                         <?php if (get_config('battlenet_support')) { ?>
                                                             <div class="input-group">
                                                                 <span class="input-group"><?php elang('email'); ?></span>
@@ -201,6 +204,7 @@ require_once 'header.php'; ?>
                                             </div>
                                             <div class="modal-body">
                                                 <form action="" method="post">
+                                                    <?php echo csrf_field(); ?>
                                                     <?php if (get_config('battlenet_support')) { ?>
                                                         <div class="input-group">
                                                             <span class="input-group"><?php elang('email'); ?></span>
@@ -242,6 +246,7 @@ require_once 'header.php'; ?>
                                             </div>
                                             <div class="modal-body">
                                                 <form action="" method="post">
+                                                    <?php echo csrf_field(); ?>
                                                     <?php if (get_config('battlenet_support')) { ?>
                                                         <div class="input-group">
                                                             <span class="input-group"><?php elang('email'); ?></span>
@@ -465,6 +470,7 @@ require_once 'header.php'; ?>
             <!-- Modal body -->
             <div class="modal-body">
                 <form action="" method="post">
+                    <?php echo csrf_field(); ?>
                     <div class="form-group">
                         <label for="lang"><?php elang('change_lang_form_head'); ?></label>
                         <select class="form-control" id="langchange" name="langchange">

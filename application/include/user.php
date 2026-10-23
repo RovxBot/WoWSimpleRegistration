@@ -13,12 +13,12 @@ class user
 
     public static function post_handler()
     {
-        if (!empty($_GET['restore']) && !empty($_GET['key'])) {
-            self::restorepassword_setnewpw($_GET['restore'], $_GET['key']);
+        if (($_POST['submit'] ?? '') === 'confirm_restore') {
+            self::restorepassword_setnewpw($_POST['account'] ?? '', $_POST['key'] ?? '');
         }
 
-        if (!empty($_GET['enabletfa']) && !empty($_GET['account'])) {
-            self::account_set_2fa($_GET['enabletfa'], $_GET['account']);
+        if (($_POST['submit'] ?? '') === 'confirm_2fa') {
+            self::account_set_2fa($_POST['key'] ?? '', $_POST['account'] ?? '');
         }
 
         if (!empty($_POST['langchangever'])) {
@@ -125,6 +125,10 @@ class user
         }
 
         if (!self::validate_registration_invite_code()) {
+            return false;
+        }
+
+        if (!soap_account_password_is_valid($_POST['password'])) {
             return false;
         }
 
@@ -281,6 +285,10 @@ class user
         }
 
         if (!self::validate_registration_invite_code()) {
+            return false;
+        }
+
+        if (!soap_account_password_is_valid($_POST['password'])) {
             return false;
         }
 
@@ -488,7 +496,7 @@ class user
             }
             if (get_config('srp6_version') == 2) {
                 if (!verifySRP6BnetV2($bnetAccountInfo['email'], $_POST['old_password'], $bnetAccountInfo[get_core_config("salt_field")], $bnetAccountInfo[get_core_config("verifier_field")])) {
-                    error_msg($bnetAccountInfo[get_core_config("salt_field")]);
+                    error_msg(lang('old_password_not_valid'));
                     return false;
                 }
                 
@@ -654,17 +662,17 @@ class user
             self::add_password_key_to_acctbl();
         }
 
-        $restore_key = strtolower(md5(time() . mt_rand(1000, 9999)) . mt_rand(10000, 99999));
+        list($restore_key, $stored_key) = account_action_token('reset');
 
         $queryBuilder = database::$auth->createQueryBuilder();
         $queryBuilder->update('account')
             ->set('restore_key', ':restore_key')
             ->where('id = :id')
-            ->setParameter('restore_key', $antiXss->xss_clean($restore_key))
+            ->setParameter('restore_key', $stored_key)
             ->setParameter('id', $userinfo['id']);
         $queryBuilder->executeQuery();
 
-        $restorepass_URL = get_config('baseurl') . '/index.php?restore=' . strtolower($field_acc) . '&key=' . $restore_key;
+        $restorepass_URL = htmlspecialchars(get_config('baseurl') . '/index.php?' . http_build_query(['restore' => strtolower($field_acc), 'key' => $restore_key]), ENT_QUOTES, 'UTF-8');
         $message = "For restore you game account open <a href='$restorepass_URL' target='_blank'>this link</a>: <BR>$restorepass_URL";
         send_phpmailer(strtolower($userinfo['email']), lang('restore_account_password'), $message);
         success_msg(lang('check_your_email'));
@@ -678,7 +686,7 @@ class user
             return false;
         }
 
-        if ($restore_key == 1 || strlen($restore_key) < 30) {
+        if (!is_string($restore_key) || !preg_match('/\A[a-f0-9]{64}\z/D', $restore_key)) {
             return false;
         }
 
@@ -701,54 +709,42 @@ class user
             return false;
         }
 
-        if ($userinfo['restore_key'] != $restore_key) {
+        if (!account_action_token_is_valid($userinfo['restore_key'] ?? '', $restore_key, 'reset')) {
+            error_msg('This password reset link is invalid or has expired. Request a new link.');
             return false;
         }
 
-        $new_password = generateRandomString(12);
+        $new_password = $_POST['password'] ?? '';
+        $maxLength = get_config('battlenet_support') && get_config('srp6_support') && get_config('srp6_version') == 2 ? 128 : 16;
+        if (strlen($new_password) < 4 || strlen($new_password) > $maxLength || $new_password !== ($_POST['repassword'] ?? '')) {
+            error_msg(lang('passwords_not_equal') . ' ' . lang('passwords_length'));
+            return false;
+        }
+
+        if (!soap_account_password_is_valid($new_password) || !self::consume_account_action_token($userinfo, $restore_key, 'reset')) {
+            return false;
+        }
+
+        $message = 'Your account password has been changed. If you did not request this change, contact the server administrator.';
 
         if (get_config('battlenet_support')) {
-            $message = 'Your new account information : <br>Email: ' . strtolower($userinfo['email']) . '<br>Password: ' . $new_password;
+            $gamePassword = (int) get_config('srp6_version') === 2 ? substr($new_password, 0, 16) : $new_password;
             if (empty(get_config('srp6_support'))) {
-                $hashed_pass = strtoupper(sha1(strtoupper($userinfo['username'] . ':' . $new_password)));
-
-                $queryBuilder = database::$auth->createQueryBuilder();
-                $queryBuilder->update('account')
-                    ->set('sha_pass_hash', ':sha_pass_hash')
-                    ->set('sessionkey', '')
-                    ->set('v', '')
-                    ->set('s', '')
-                    ->set('restore_key', '1')
-                    ->where('id = :id')
-                    ->setParameter('sha_pass_hash', $antiXss->xss_clean($hashed_pass))
-                    ->setParameter('id', $userinfo['id']);
-                $queryBuilder->executeQuery();
+                database::$auth->update('account', ['sha_pass_hash' => strtoupper(sha1(strtoupper($userinfo['username'] . ':' . $gamePassword)))], ['id' => $userinfo['id']]);
             } else {
-                list($salt, $verifier) = getRegistrationData(strtoupper($userinfo['username']), $new_password);
-
-                $queryBuilder = database::$auth->createQueryBuilder();
-                $queryBuilder->update('account')
-                    ->set(get_core_config("salt_field"), ':salt')
-                    ->set(get_core_config("verifier_field"), ':verifier')
-                    ->set('restore_key', '1')
-                    ->where('id = :id')
-                    ->setParameter('salt', $salt)
-                    ->setParameter('verifier', $verifier)
-                    ->setParameter('id', $userinfo['id']);
-                $queryBuilder->executeQuery();
+                list($salt, $verifier) = getRegistrationData($userinfo['username'], $gamePassword);
+                database::$auth->update('account', [get_core_config('salt_field') => $salt, get_core_config('verifier_field') => $verifier], ['id' => $userinfo['id']]);
             }
-
-            $bnet_hashed_pass = strtoupper(bin2hex(strrev(hex2bin(strtoupper(hash('sha256', strtoupper(hash('sha256', strtoupper($userinfo['email'])) . ':' . strtoupper($new_password))))))));
-
-            $queryBuilder = database::$auth->createQueryBuilder();
-            $queryBuilder->update('battlenet_accounts')
-                ->set('sha_pass_hash', ':sha_pass_hash')
-                ->where('id = :id')
-                ->setParameter('sha_pass_hash', $antiXss->xss_clean($bnet_hashed_pass))
-                ->setParameter('id', $userinfo['battlenet_account']);
-            $queryBuilder->executeQuery();
+            if (get_config('srp6_support') && in_array((int) get_config('srp6_version'), [1, 2], true)) {
+                list($salt, $verifier) = (int) get_config('srp6_version') === 2
+                    ? getRegistrationDataBnetV2($userinfo['email'], $new_password)
+                    : getRegistrationDataBnetV1($userinfo['email'], $new_password);
+                $credentials = ['srp_version' => (int) get_config('srp6_version'), get_core_config('salt_field') => $salt, get_core_config('verifier_field') => $verifier];
+            } else {
+                $credentials = ['sha_pass_hash' => strtoupper(bin2hex(strrev(hex2bin(strtoupper(hash('sha256', strtoupper(hash('sha256', strtoupper($userinfo['email'])) . ':' . strtoupper($new_password))))))))];
+            }
+            database::$auth->update('battlenet_accounts', $credentials, ['id' => $userinfo['battlenet_account']]);
         } else {
-            $message = 'Your new account information : <br>Username: ' . strtolower($userinfo['username']) . '<br>Password: ' . $new_password;
             if (empty(get_config('soap_for_register'))) {
                 if (empty(get_config('srp6_support'))) {
                     $hashed_pass = strtoupper(sha1(strtoupper($userinfo['username'] . ':' . $new_password)));
@@ -779,7 +775,11 @@ class user
                     $queryBuilder->executeQuery();
                 }
             } else {
-                $command = str_replace('{USERNAME}', $antiXss->xss_clean(strtoupper($userinfo['username'])), get_config('soap_cp_command'));
+                $commandTemplate = get_config('soap_cp_command');
+                if (!$commandTemplate && (int) get_config('server_core') === 1) {
+                    $commandTemplate = 'account set password {USERNAME} {PASSWORD} {PASSWORD}';
+                }
+                $command = str_replace('{USERNAME}', $antiXss->xss_clean(strtoupper($userinfo['username'])), (string) $commandTemplate);
                 $command = str_replace('{PASSWORD}', $antiXss->xss_clean($new_password), $command);
                 if (RemoteCommandWithSOAP($command)) {
                     success_msg(lang('password_changed'));
@@ -797,7 +797,9 @@ class user
             }
         }
 
-        send_phpmailer(strtolower($userinfo['email']), 'New Account Password', $message);
+        send_phpmailer(strtolower($userinfo['email']), 'Account password changed', $message);
+        unset($_SESSION['portal_account_id'], $_SESSION['portal_username'], $_SESSION['portal_email']);
+        session_regenerate_id(true);
         success_msg(lang('check_your_email'));
         return false;
     }
@@ -963,13 +965,17 @@ class user
 
         if (empty(get_config('srp6_support'))) {
             $hashedPass = strtoupper(sha1(strtoupper($userinfo['username'] . ':' . $password)));
-            if (strtoupper($userinfo['sha_pass_hash']) !== $hashedPass) {
+            if (!hash_equals(strtoupper($userinfo['sha_pass_hash']), $hashedPass)) {
                 return false;
             }
         } else {
             if (!verifySRP6($userinfo['username'], $password, $userinfo[get_core_config("salt_field")], $userinfo[get_core_config("verifier_field")])) {
                 return false;
             }
+        }
+
+        if (!portal_totp_is_valid($userinfo['totp_secret'] ?? '', $_POST['totp_code'] ?? '')) {
+            return false;
         }
 
         return $userinfo;
@@ -994,7 +1000,7 @@ class user
             }
 
             $hashedPass = strtoupper(bin2hex(strrev(hex2bin(strtoupper(hash('sha256', strtoupper(hash('sha256', $email)) . ':' . strtoupper($password)))))));
-            if (strtoupper($bnetAccountInfo['sha_pass_hash']) !== $hashedPass) {
+            if (!hash_equals(strtoupper($bnetAccountInfo['sha_pass_hash']), $hashedPass)) {
                 return false;
             }
         } else {
@@ -1012,10 +1018,29 @@ class user
                 if (empty($bnetAccountInfo['id']) || !verifySRP6BnetV2($bnetAccountInfo['email'], $password, $bnetAccountInfo[get_core_config("salt_field")], $bnetAccountInfo[get_core_config("verifier_field")])) {
                     return false;
                 }
+            } else {
+                return false;
             }
         }
 
+        if (!portal_totp_is_valid(($bnetAccountInfo ?? $userinfo)['totp_secret'] ?? '', $_POST['totp_code'] ?? '')) {
+            return false;
+        }
+
         return $userinfo;
+    }
+
+    public static function portal_credential_fingerprint($account)
+    {
+        if (get_config('battlenet_support')) {
+            $account = self::get_bnetaccount_by_email($account['email']);
+        }
+        return hash('sha256', serialize([
+            $account['sha_pass_hash'] ?? '',
+            $account[get_core_config('salt_field')] ?? '',
+            $account[get_core_config('verifier_field')] ?? '',
+            $account['totp_secret'] ?? '',
+        ]));
     }
 
     public static function get_online_players($realmID)
@@ -1089,7 +1114,7 @@ class user
             return false;
         }
 
-        $verify_key = md5(strtolower($userinfo['email']) . "_" . time() . rand(1, 999999));
+        list($verify_key, $stored_key) = account_action_token('2fa');
 
         if (!isset($userinfo['restore_key'])) {
             self::add_password_key_to_acctbl();
@@ -1099,7 +1124,7 @@ class user
         $queryBuilder->update('account')
             ->set('restore_key', ':restore_key')
             ->where('id = :id')
-            ->setParameter('restore_key', $antiXss->xss_clean($verify_key))
+            ->setParameter('restore_key', $stored_key)
             ->setParameter('id', $userinfo['id']);
         $queryBuilder->executeQuery();
 
@@ -1108,7 +1133,7 @@ class user
             $account = $userinfo['username'];
         }
 
-        $restorepass_URL = get_config('baseurl') . '/index.php?enabletfa=' . strtolower($verify_key) . '&account=' . strtolower($account);
+        $restorepass_URL = htmlspecialchars(get_config('baseurl') . '/index.php?' . http_build_query(['enabletfa' => $verify_key, 'account' => strtolower($account)]), ENT_QUOTES, 'UTF-8');
         $message = "Hey, to enable Two-Factor Authentication (2FA), Please open  <a href='$restorepass_URL' target='_blank'>this link</a>: <BR>$restorepass_URL";
         send_phpmailer(strtolower($userinfo['email']), 'Enable Account 2FA', $message);
         success_msg(lang('check_your_email'));
@@ -1127,7 +1152,7 @@ class user
             return false;
         }
 
-        if ($verify_key == 1 || strlen($verify_key) < 30) {
+        if (!is_string($verify_key) || !preg_match('/\A[a-f0-9]{64}\z/D', $verify_key)) {
             return false;
         }
 
@@ -1152,19 +1177,15 @@ class user
             return false;
         }
 
-        if ($userinfo['restore_key'] != $verify_key) {
+        if (!self::consume_account_action_token($userinfo, $verify_key, '2fa')) {
             return false;
         }
 
-        $ga = new PHPGangsta_GoogleAuthenticator();
-        $tfa_key = $ga->createSecret();
-
-        $queryBuilder = database::$auth->createQueryBuilder();
-        $queryBuilder->update('account')
-            ->set('restore_key', '1')
-            ->where('id = :id')
-            ->setParameter('id', $userinfo['id']);
-        $queryBuilder->executeQuery();
+        $alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+        $tfa_key = '';
+        for ($i = 0; $i < 32; $i++) {
+            $tfa_key .= $alphabet[random_int(0, 31)];
+        }
 
         $command = str_replace('{USERNAME}', $antiXss->xss_clean(strtoupper($userinfo['username'])), get_config('soap_2d_command'));
         RemoteCommandWithSOAP($command);
@@ -1177,11 +1198,25 @@ class user
         $acc_name = str_replace('_', '', $acc_name);
         $acc_name = str_replace('@', '', $acc_name);
 
-        $message = 'Two-Factor Authentication (2FA) enabled on your account.<br>Please scan the barcode with Google Authenticator.<BR>';
-        $message .= '<img src="' . $ga->getQRCodeGoogleUrl($acc_name, $tfa_key) . '"><BR>';
-        $message .= 'or you can add this code to Google Authenticator: <B>' . $tfa_key . '</B>.<BR>';
+        $message = 'Two-Factor Authentication (2FA) enabled on your account.<br>';
+        $message .= 'Add this setup key to your authenticator app: <B>' . $tfa_key . '</B>.<BR>';
 
         send_phpmailer(strtolower($userinfo['email']), 'Account 2FA enabled', $message);
         success_msg(lang('check_your_email'));
+    }
+
+    private static function consume_account_action_token($account, $token, $purpose)
+    {
+        $stored = $account['restore_key'] ?? '';
+        if (empty($account['id']) || !account_action_token_is_valid($stored, $token, $purpose)) {
+            return false;
+        }
+
+        // Compare and consume in one statement so concurrent requests cannot
+        // reuse the same email link or exchange a reset link for a 2FA link.
+        return database::$auth->executeStatement(
+            'UPDATE account SET restore_key = :used WHERE id = :id AND restore_key = :expected',
+            ['used' => '1', 'id' => $account['id'], 'expected' => $stored]
+        ) === 1;
     }
 }

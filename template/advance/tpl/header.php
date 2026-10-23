@@ -96,6 +96,7 @@
             <!-- Modal body -->
             <div class="modal-body">
                 <form action="" method="post">
+                    <?php echo csrf_field(); ?>
                     <div class="form-group">
                         <label for="lang"><?php elang('change_lang_form_head'); ?></label>
                         <select class="form-control" id="langchange" name="langchange">

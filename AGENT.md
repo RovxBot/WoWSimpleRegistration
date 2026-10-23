@@ -2,6 +2,15 @@
 
 This file exists to keep future agents from re-discovering the same deployment and gameplay constraints.
 
+## Security review — 2026-10-23
+
+- Live PHP was verified as `8.3.31`; the local infra Dockerfile did not prove the live version.
+- Local app and infra changes target patched PHP `8.5.12` and also allow PHP `8.4.27+`.
+- Source changes do not upgrade production until the image build and GitOps rollout complete.
+- See `docs/security-review-2026-10-23.md` for evidence, testing, OS scan findings, and rollout steps.
+- Infrastructure changes are made directly in the local `homelab-infra` checkout: `ops/grimguzzler-registration/Dockerfile` and `.github/workflows/grimguzzler-registration-image.yml`.
+- Do not describe the site/image as free of known vulnerabilities: OS findings and end-of-life Bootstrap remain.
+
 ## Purpose
 
 This repository powers the `grimguzzler-registration` website for a WotLK AzerothCore server.

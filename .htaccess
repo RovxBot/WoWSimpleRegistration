@@ -1,0 +1,9 @@
+Options -Indexes
+
+# Deny repository metadata, including files inside .git.
+RedirectMatch 404 "(?i)(^|/)\.(?!well-known(?:/|$))"
+RedirectMatch 404 "(?i)^/(?:tests|docs|ops)(?:/|$)"
+
+<FilesMatch "(?i)^(?:AGENTS?\.md|SECURITY\.md|README\.md|composer\.(?:json|lock)|.*\.(?:sample|bak|sql|log|env))$">
+    Require all denied
+</FilesMatch>

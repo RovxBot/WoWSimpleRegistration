@@ -13,19 +13,8 @@ $success_msg = "";
 
 function getIP()
 {
-    if (!empty($_SERVER['HTTP_CF_CONNECTING_IP'])) {
-        // IP passed from Cloudflare
-        $ip = $_SERVER['HTTP_CF_CONNECTING_IP'];
-    } elseif (!empty($_SERVER['HTTP_CLIENT_IP'])) {
-        //ip from share internet
-        $ip = $_SERVER['HTTP_CLIENT_IP'];
-    } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-        //ip pass from proxy
-        $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
-    } else {
-        $ip = $_SERVER['REMOTE_ADDR'];
-    }
-    return $ip;
+    $ip = $_SERVER['REMOTE_ADDR'] ?? '';
+    return filter_var($ip, FILTER_VALIDATE_IP) ? $ip : 'unknown';
 }
 
 function get_config($name)
@@ -53,20 +42,24 @@ function get_core_config($name)
 function error_msg($input = false)
 {
     global $error_error;
-    if (!empty($error_error)) {
-        echo "<p class=\"alert alert-danger\">$error_error</p>";
-    } elseif (!empty($input)) {
+    if ($input !== false) {
         $error_error = $input;
+        return;
+    }
+    if (!empty($error_error)) {
+        echo '<p class="alert alert-danger">' . htmlspecialchars((string) $error_error, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '</p>';
     }
 }
 
 function success_msg($input = false)
 {
     global $success_msg;
-    if (!empty($success_msg)) {
-        echo "<p class=\"alert alert-success\">$success_msg</p>";
-    } elseif (!empty($input)) {
+    if ($input !== false) {
         $success_msg = $input;
+        return;
+    }
+    if (!empty($success_msg)) {
+        echo '<p class="alert alert-success">' . htmlspecialchars((string) $success_msg, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '</p>';
     }
 }
 
@@ -174,9 +167,18 @@ function generateRandomString($length = 10)
     $charactersLength = strlen($characters);
     $randomString = '';
     for ($i = 0; $i < $length; $i++) {
-        $randomString .= $characters[rand(0, $charactersLength - 1)];
+        $randomString .= $characters[random_int(0, $charactersLength - 1)];
     }
     return $randomString;
+}
+
+function soap_account_password_is_valid($password)
+{
+    if (get_config('soap_for_register') && preg_match('/[\x00-\x20\x7f]/', $password)) {
+        error_msg('Passwords used with SOAP must not contain spaces or control characters.');
+        return false;
+    }
+    return true;
 }
 
 
@@ -192,12 +194,14 @@ function RemoteCommandWithSOAP($COMMAND)
             'uri' => get_config('soap_uri'),
             'style' => get_config('soap_style'),
             'login' => get_config('soap_username'),
-            'password' => get_config('soap_password')
+            'password' => get_config('soap_password'),
+            'connection_timeout' => 5,
+            'stream_context' => stream_context_create(['http' => ['timeout' => 10]]),
         ));
         $conn->executeCommand(new SoapParam($COMMAND, 'command'));
         unset($conn);
         return true;
-    } catch (Exception $e) {
+    } catch (Throwable $e) {
         return false;
     }
 }
@@ -221,6 +225,8 @@ function RemoteCommandWithSOAPDetailed($COMMAND)
             'login' => get_config('soap_username'),
             'password' => get_config('soap_password'),
             'exceptions' => true,
+            'connection_timeout' => 5,
+            'stream_context' => stream_context_create(['http' => ['timeout' => 10]]),
         ));
 
         $response = $conn->executeCommand(new SoapParam($COMMAND, 'command'));
@@ -315,80 +321,53 @@ function soap_transport_error_is_ambiguous($message)
     return false;
 }
 
-function validate_hcaptcha()
+function captcha_verify_request($url, $field)
 {
-    if (empty($_POST['h-captcha-response'])) {
+    $token = $_POST[$field] ?? '';
+    if (!is_string($token) || $token === '' || strlen($token) > 8192) {
         return false;
     }
-
-    try {
-        $data = array(
-            'secret' => get_config('captcha_secret'),
-            'response' => $_POST['h-captcha-response']
-        );
-        $verify = curl_init();
-        curl_setopt($verify, CURLOPT_URL, "https://hcaptcha.com/siteverify");
-        curl_setopt($verify, CURLOPT_POST, true);
-        curl_setopt($verify, CURLOPT_POSTFIELDS, http_build_query($data));
-        curl_setopt($verify, CURLOPT_RETURNTRANSFER, true);
-        $response = curl_exec($verify);
-        $responseData = json_decode($response);
-        if ($responseData->success) {
-            return true;
-        }
-    } catch (Exception $e) {
+    $verify = curl_init($url);
+    if ($verify === false) {
+        return false;
     }
+    try {
+        curl_setopt_array($verify, [
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => http_build_query([
+                'secret' => get_config('captcha_secret'),
+                'response' => $token,
+            ]),
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CONNECTTIMEOUT => 5,
+            CURLOPT_TIMEOUT => 10,
+            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_SSL_VERIFYHOST => 2,
+        ]);
+        $response = curl_exec($verify);
+        if (!is_string($response) || curl_getinfo($verify, CURLINFO_RESPONSE_CODE) !== 200) {
+            return false;
+        }
+        $data = json_decode($response, true);
+        return is_array($data) && ($data['success'] ?? false) === true;
+    } finally {
+        unset($verify);
+    }
+}
 
-    return false;
+function validate_hcaptcha()
+{
+    return captcha_verify_request('https://api.hcaptcha.com/siteverify', 'h-captcha-response');
 }
 
 function validate_recaptcha()
 {
-    if (empty($_POST['g-recaptcha-response'])) {
-        return false;
-    }
-
-    try {
-        $verify = curl_init();
-        curl_setopt($verify, CURLOPT_URL, "https://www.google.com/recaptcha/api/siteverify?secret=" . get_config('captcha_secret') . "&response=" . $_POST['g-recaptcha-response']);
-        curl_setopt($verify, CURLOPT_RETURNTRANSFER, true);
-        $response = curl_exec($verify);
-        $responseData = json_decode($response, true);
-        if ($responseData["success"] == true) {
-            return true;
-        }
-    } catch (Exception $e) {
-    }
-
-    return false;
+    return captcha_verify_request('https://www.google.com/recaptcha/api/siteverify', 'g-recaptcha-response');
 }
 
 function validate_cloudflare_turnstile()
 {
-    if (empty($_POST['cf-turnstile-response'])) {
-        return false;
-    }
-
-    try {
-        $data = array(
-            'secret' => get_config('captcha_secret'),
-            'response' => $_POST['cf-turnstile-response'],
-            'remoteip' => getIP()
-        );
-        $verify = curl_init();
-        curl_setopt($verify, CURLOPT_URL, "https://challenges.cloudflare.com/turnstile/v0/siteverify");
-        curl_setopt($verify, CURLOPT_POST, true);
-        curl_setopt($verify, CURLOPT_POSTFIELDS, http_build_query($data));
-        curl_setopt($verify, CURLOPT_RETURNTRANSFER, true);
-        $response = curl_exec($verify);
-        $responseData = json_decode($response, true);
-        if (isset($responseData["success"]) && $responseData["success"] == true) {
-            return true;
-        }
-    } catch (Exception $e) {
-    }
-
-    return false;
+    return captcha_verify_request('https://challenges.cloudflare.com/turnstile/v0/siteverify', 'cf-turnstile-response');
 }
 
 function captcha_validation()
@@ -608,7 +587,7 @@ function verifySRP6($user, $pass, $salt, $verifier)
         GMP_LSW_FIRST
     );
     $v = gmp_powm($g, $x, $N);
-    return ($verifier === str_pad(gmp_export($v, 1, GMP_LSW_FIRST), 32, chr(0), STR_PAD_RIGHT));
+    return hash_equals($verifier, str_pad(gmp_export($v, 1, GMP_LSW_FIRST), 32, chr(0), STR_PAD_RIGHT));
 }
 
 function verifySRP6BnetV1($email, $pass, $salt, $verifier)

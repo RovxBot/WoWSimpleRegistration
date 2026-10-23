@@ -1,0 +1,13 @@
+.git
+.github
+.agents
+.codex
+.aws
+.idea
+.DS_Store
+AGENT.md
+AGENTS.md
+tests
+docs
+application/vendor
+application/config/config.php

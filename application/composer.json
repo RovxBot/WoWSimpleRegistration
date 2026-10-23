@@ -1,12 +1,31 @@
 {
+  "name": "rovxbot/wow-simple-registration",
+  "description": "Game account registration and Grim Token player portal",
+  "type": "project",
+  "license": "GPL-3.0-only",
   "require": {
+    "php": "~8.4.27 || ~8.5.12",
     "voku/anti-xss": "^4.1",
-    "phpunit/php-timer": "^7.0",
-    "rmccue/requests": "^2.0",
-    "phpmailer/phpmailer": "^6.9",
-    "gregwar/captcha": "^1.2",
-    "phpgangsta/googleauthenticator": "dev-master",
+    "phpunit/php-timer": "^8.0",
+    "phpmailer/phpmailer": "^7.1",
+    "gregwar/captcha": "^2.1",
     "doctrine/dbal": "^4.2",
-    "ext-gmp": "*"
+    "ext-gmp": "*",
+    "ext-curl": "*",
+    "ext-gd": "*",
+    "ext-mbstring": "*",
+    "ext-pdo_mysql": "*",
+    "ext-soap": "*"
+  },
+  "config": {
+    "sort-packages": true,
+    "platform": {
+      "php": "8.4.27"
+    },
+    "allow-plugins": false
+  },
+  "scripts": {
+    "test": "php ../tests/security.php",
+    "lint": "@php ../tests/lint.php"
   }
 }

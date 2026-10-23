@@ -8,19 +8,17 @@
 
 use voku\helper\AntiXSS;
 
-header('X-Powered-Framework: MasterkinG-Framework');
-header('X-Powered-CMS: MasterkinG-CMS');
-
 ob_start();
-session_start();
 
 define('base_path', str_replace('application/loader.php', '', str_replace("\\", '/', __FILE__)));
 define('app_path', str_replace('application/loader.php', '', str_replace("\\", '/', __FILE__)) . 'application/');
 
-require app_path . 'vendor/autoload.php';
 require_once app_path . 'config/config.php';
 require_once app_path . 'include/core_handler.php';
 require_once app_path . 'include/functions.php';
+require_once app_path . 'include/security.php';
+security_bootstrap();
+require app_path . 'vendor/autoload.php';
 
 /* Configuration check */
 if (!get_config('disable_changepassword') && get_config('soap_for_register')) {
@@ -53,7 +51,7 @@ if (!preg_match('/^([a-z-]+)$/i', $languageName) || !file_exists($languageFile))
     exit('Language is not valid!');
 }
 
-if (!empty($_COOKIE['website_lang']) && !empty($config['supported_langs'][$_COOKIE['website_lang']]) && file_exists(app_path . 'language/' . strtolower($_COOKIE['website_lang']) . '.php')) {
+if (!empty($_COOKIE['website_lang']) && is_string($_COOKIE['website_lang']) && preg_match('/\A[a-z-]+\z/D', $_COOKIE['website_lang']) && !empty($config['supported_langs'][$_COOKIE['website_lang']]) && file_exists(app_path . 'language/' . strtolower($_COOKIE['website_lang']) . '.php')) {
     require_once app_path . 'language/' . strtolower($_COOKIE['website_lang']) . '.php';
 } else {
     require_once $languageFile;

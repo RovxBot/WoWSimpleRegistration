@@ -21,6 +21,7 @@ require_once 'rules.php';
             <div class="col-lg-6 order-2 order-lg-1">
                 <form action="<?php echo $antiXss->xss_clean(get_config("baseurl")); ?>/index.php#register"
                     method="post">
+                        <?php echo csrf_field(); ?>
                     <div style="padding: 10px;" data-aos="fade-right" data-aos-delay="100">
                         <?php error_msg();
                         success_msg(); //Display message. ?>
@@ -82,6 +83,7 @@ require_once 'rules.php';
                                 <form
                                     action="<?php echo $antiXss->xss_clean(get_config("baseurl")); ?>/index.php#register"
                                     method="post">
+                                        <?php echo csrf_field(); ?>
                                     <div>
                                         <ul>
                                             <li><?php elang('two_factor_authentication_tip1'); ?> <a
@@ -137,6 +139,7 @@ require_once 'rules.php';
                                 <form
                                     action="<?php echo $antiXss->xss_clean(get_config("baseurl")); ?>/index.php#register"
                                     method="post" target="_blank">
+                                        <?php echo csrf_field(); ?>
                                     <?php if (get_config('battlenet_support')) { ?>
                                     <div class="input-group">
                                         <span class="input-group"><?php elang('email'); ?></span>
@@ -184,6 +187,7 @@ require_once 'rules.php';
                                 <form
                                     action="<?php echo $antiXss->xss_clean(get_config("baseurl")); ?>/index.php#register"
                                     method="post">
+                                        <?php echo csrf_field(); ?>
                                     <?php if (get_config('battlenet_support')) { ?>
                                     <div class="input-group">
                                         <span class="input-group"><?php elang('email'); ?></span>
@@ -223,6 +227,7 @@ require_once 'rules.php';
                                 <form
                                     action="<?php echo $antiXss->xss_clean(get_config("baseurl")); ?>/index.php#register"
                                     method="post">
+                                        <?php echo csrf_field(); ?>
                                     <?php if (get_config('battlenet_support')) { ?>
                                     <div class="input-group">
                                         <span class="input-group"><?php elang('email'); ?></span>

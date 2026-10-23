@@ -1,0 +1,38 @@
+name: PHP security and compatibility
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: '17 21 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  php:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php: ['8.4', '8.5']
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@d52fc211a0436f8839a587b3b5b8efddab4744ea # v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: curl, gd, gmp, mbstring, pdo_mysql, pdo_sqlite, soap
+          tools: composer:v2
+          coverage: none
+      - run: composer validate --strict
+        working-directory: application
+      - run: composer install --no-interaction --prefer-dist
+        working-directory: application
+      - run: composer check-platform-reqs
+        working-directory: application
+      - run: composer audit --locked --no-interaction
+        working-directory: application
+      - run: composer lint && composer test
+        working-directory: application

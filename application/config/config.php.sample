@@ -28,7 +28,7 @@ $config['supported_langs'] = [ // Define supported languages here. You can remov
 ];
 
 // Debug Mode - Enable it to display errors during troubleshooting.
-$config['debug_mode'] = true; // Set to true to enable debug mode if you encounter blank screens or errors.
+$config['debug_mode'] = false; // Set to true to enable debug mode if you encounter blank screens or errors.
 // ⚠️ **Important: Remember to disable debug mode** once you have resolved the issues. Debug mode should be set to `false` before deploying the website in a production environment or going live. This helps to ensure security and performance are not compromised.
 
 // Server Information - Customize this with your server's specific details.

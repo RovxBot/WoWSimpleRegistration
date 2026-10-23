@@ -58,6 +58,12 @@ class store
             return false;
         }
 
+        $identity = get_config('battlenet_support') ? ($_POST['email'] ?? '') : ($_POST['username'] ?? '');
+        if (!portal_login_rate_limit((string) $identity)) {
+            error_msg(lang_or('portal_login_throttled', 'Too many login attempts. Please try again in 15 minutes.'));
+            return false;
+        }
+
         if (get_config('battlenet_support')) {
             if (empty($_POST['email']) || empty($_POST['password'])) {
                 error_msg(lang_or('account_is_not_valid', 'Account is not valid.'));
@@ -83,6 +89,8 @@ class store
         $_SESSION[self::SESSION_ACCOUNT_ID] = (int) $account['id'];
         $_SESSION[self::SESSION_USERNAME] = (string) $account['username'];
         $_SESSION[self::SESSION_EMAIL] = (string) $account['email'];
+        $_SESSION['portal_credentials'] = user::portal_credential_fingerprint($account);
+        $_SESSION['portal_login_time'] = time();
         success_msg(lang_or('portal_login_success', 'Login successful. Welcome back.'));
         return true;
     }
@@ -111,7 +119,9 @@ class store
         }
 
         $account = user::get_user_by_id((int) $_SESSION[self::SESSION_ACCOUNT_ID]);
-        if (empty($account['id'])) {
+        if (empty($account['id']) || empty($_SESSION['portal_credentials'])
+            || !hash_equals($_SESSION['portal_credentials'], user::portal_credential_fingerprint($account))
+            || (int) ($_SESSION['portal_login_time'] ?? 0) + 3600 < time()) {
             self::clear_portal_session();
             return false;
         }
@@ -851,6 +861,7 @@ class store
     private static function clear_portal_session()
     {
         unset($_SESSION[self::SESSION_ACCOUNT_ID], $_SESSION[self::SESSION_USERNAME], $_SESSION[self::SESSION_EMAIL]);
+        unset($_SESSION['portal_credentials'], $_SESSION['portal_login_time']);
     }
 
     private static function extract_account_id($account)

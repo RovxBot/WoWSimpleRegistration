@@ -36,6 +36,7 @@ $showServerData = $showOnlinePlayers || $showTopPlayers;
                     } ?>
                     <?php if ($signupAllowed) { ?>
                     <form action="<?php echo $antiXss->xss_clean(get_config("baseurl")); ?>/index.php#register" method="post">
+                        <?php echo csrf_field(); ?>
                         <div class="input-group">
                             <span class="input-group"><?php elang('email'); ?></span>
                             <input type="email" class="form-control" required placeholder="<?php elang('email'); ?>" name="email">
@@ -98,6 +99,7 @@ $showServerData = $showOnlinePlayers || $showTopPlayers;
                             </div>
                             <div class="modal-body">
                                 <form action="<?php echo $antiXss->xss_clean(get_config("baseurl")); ?>/index.php#register" method="post">
+                                    <?php echo csrf_field(); ?>
                                     <div>
                                         <ul>
                                             <li><?php elang('two_factor_authentication_tip1'); ?> <a href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2" target="_blank">Google Store</a> - <a href="https://apps.apple.com/app/google-authenticator/id388497605" target="_blank">Apple Store</a></li>
@@ -140,6 +142,7 @@ $showServerData = $showOnlinePlayers || $showTopPlayers;
                             </div>
                             <div class="modal-body">
                                 <form action="<?php echo $antiXss->xss_clean(get_config("baseurl")); ?>/index.php#register" method="post" target="_blank">
+                                    <?php echo csrf_field(); ?>
                                     <?php if (get_config('battlenet_support')) { ?>
                                     <div class="input-group">
                                         <span class="input-group"><?php elang('email'); ?></span>
@@ -180,6 +183,7 @@ $showServerData = $showOnlinePlayers || $showTopPlayers;
                             </div>
                             <div class="modal-body">
                                 <form action="<?php echo $antiXss->xss_clean(get_config("baseurl")); ?>/index.php#register" method="post">
+                                    <?php echo csrf_field(); ?>
                                     <?php if (get_config('battlenet_support')) { ?>
                                     <div class="input-group">
                                         <span class="input-group"><?php elang('email'); ?></span>
@@ -211,6 +215,7 @@ $showServerData = $showOnlinePlayers || $showTopPlayers;
                             </div>
                             <div class="modal-body">
                                 <form action="<?php echo $antiXss->xss_clean(get_config("baseurl")); ?>/index.php#register" method="post">
+                                    <?php echo csrf_field(); ?>
                                     <?php if (get_config('battlenet_support')) { ?>
                                     <div class="input-group">
                                         <span class="input-group"><?php elang('email'); ?></span>
@@ -277,6 +282,7 @@ $showServerData = $showOnlinePlayers || $showTopPlayers;
                     } ?>
                     <?php if (!$portalLoggedIn) { ?>
                     <form action="<?php echo $antiXss->xss_clean(get_config("baseurl")); ?>/index.php#player-portal" method="post">
+                        <?php echo csrf_field(); ?>
                         <?php if (get_config('battlenet_support')) { ?>
                         <div class="input-group">
                             <span class="input-group"><?php elang('email'); ?></span>
@@ -291,6 +297,10 @@ $showServerData = $showOnlinePlayers || $showTopPlayers;
                         <div class="input-group">
                             <span class="input-group"><?php elang('password'); ?></span>
                             <input type="password" class="form-control" required placeholder="<?php elang('password'); ?>" name="password">
+                        </div>
+                        <div class="input-group">
+                            <span class="input-group">Authenticator code (if enabled)</span>
+                            <input type="text" class="form-control" name="totp_code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code">
                         </div>
                         <input name="submit" type="hidden" value="<?php echo $antiXss->xss_clean(store::ACTION_LOGIN); ?>">
                         <div class="text-center" style="margin-top: 10px;">
@@ -324,6 +334,7 @@ $showServerData = $showOnlinePlayers || $showTopPlayers;
                         <?php } ?>
                     </div>
                     <form action="<?php echo $antiXss->xss_clean(get_config("baseurl")); ?>/index.php#player-portal" method="post">
+                        <?php echo csrf_field(); ?>
                         <input name="submit" type="hidden" value="<?php echo $antiXss->xss_clean(store::ACTION_LOGOUT); ?>">
                         <div class="text-center" style="margin-top: 18px;">
                             <input type="submit" class="btn btn-outline-secondary" value="<?php echo $antiXss->xss_clean(lang_or('logout', 'Logout')); ?>">
@@ -365,6 +376,7 @@ $showServerData = $showOnlinePlayers || $showTopPlayers;
                                 <p><?php echo $antiXss->xss_clean($service['description']); ?></p>
                                 <?php } ?>
                                 <form action="<?php echo $antiXss->xss_clean(get_config("baseurl")); ?>/index.php#player-portal" method="post">
+                                    <?php echo csrf_field(); ?>
                                     <?php if ($service['scope'] === 'character') { ?>
                                     <div class="input-group store-form-group">
                                         <span class="input-group"><?php echo $antiXss->xss_clean(lang_or('character', 'Character')); ?></span>

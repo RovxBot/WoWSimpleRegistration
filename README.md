@@ -20,8 +20,9 @@ Supported Cores:
 
 ## 🖱️ Prerequisites
 
-Ensure PHP version 8.0 or higher is installed and the following extensions are enabled:
+Use the latest patched PHP 8.5 release (8.5.12 or newer). PHP 8.4.27 or newer in the 8.4 branch is also supported. Install the following extensions:
 
+- [cURL Extension](https://www.php.net/manual/en/book.curl.php)
 - [GMP Extension](https://www.php.net/manual/en/book.gmp.php)
 - [GD Extension](https://www.php.net/manual/en/book.image.php)
 - [ZIP Extension](https://www.php.net/manual/en/book.zip.php)
@@ -58,15 +59,22 @@ Ensure PHP version 8.0 or higher is installed and the following extensions are e
 
 8. Once the configuration is complete, your registration page should be operational.
 
-## 🔧 PHP 7 Version Download
+## Security maintenance
 
-For those requiring PHP 7 support, please use the [last compatible commit for PHP 7](https://github.com/masterking32/WoWSimpleRegistration/tree/32a1e7e6bc31f2ed6ed1d83f64d1ae62aeab9d32). Follow these steps to clone the repository at the specific commit:
+PHP 7, PHP 8.0 and PHP 8.1 are end of life and must not be used for this site. The entry point and Composer constraints reject older or untested PHP branches. Keep the patch release current; version checks are a minimum, not an update service.
 
-```sh
-git clone https://github.com/masterking32/WoWSimpleRegistration
-cd WoWSimpleRegistration
-git checkout 32a1e7e6bc31f2ed6ed1d83f64d1ae62aeab9d32
+Run these checks from `application/` after dependency updates:
+
+```bash
+composer validate --strict
+composer install --no-interaction --prefer-dist
+composer check-platform-reqs
+composer audit --locked
+composer lint
+composer test
 ```
+
+The security workflow runs on changes and weekly for PHP 8.4 and 8.5. See [SECURITY.md](SECURITY.md) and the [deployment security review](docs/security-review-2026-10-23.md) for the live deployment findings, rollout steps, and remaining work.
 
 # 🪛 Debugging
 

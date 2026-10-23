@@ -55,6 +55,7 @@ require_once 'header.php'; ?>
                                     <h2 style="text-align: center;"><?php elang('create_account');?></h2>
                                     <form action="<?php echo $antiXss->xss_clean(get_config("baseurl")); ?>/index.php#register"
                                           method="post" class="form-class" id="con_form">
+                                              <?php echo csrf_field(); ?>
                                         <div style="padding: 10px;">
                                             <?php error_msg();
                                             success_msg(); //Display message. ?>
@@ -124,6 +125,7 @@ require_once 'header.php'; ?>
                                                     <div class="modal-body">
                                                         <form action="<?php echo $antiXss->xss_clean(get_config("baseurl")); ?>/index.php#register"
                                                               method="post">
+                                                                  <?php echo csrf_field(); ?>
                                                             <div>
                                                                 <ul>
                                                                     <li><?php elang('two_factor_authentication_tip1'); ?> <a
@@ -190,6 +192,7 @@ require_once 'header.php'; ?>
                                                     <div class="modal-body">
                                                         <form action="<?php echo $antiXss->xss_clean(get_config("baseurl")); ?>/index.php#register"
                                                               method="post" target="_blank">
+                                                                  <?php echo csrf_field(); ?>
                                                             <?php if (get_config('battlenet_support')) { ?>
                                                                 <div class="input-group">
                                                                     <span class="input-group"><?php elang('email'); ?></span>
@@ -236,6 +239,7 @@ require_once 'header.php'; ?>
                                                 <div class="modal-body">
                                                     <form action="<?php echo $antiXss->xss_clean(get_config("baseurl")); ?>/index.php#register"
                                                           method="post">
+                                                              <?php echo csrf_field(); ?>
                                                         <?php if (get_config('battlenet_support')) { ?>
                                                             <div class="input-group">
                                                                 <span class="input-group"><?php elang('email'); ?></span>
@@ -276,6 +280,7 @@ require_once 'header.php'; ?>
                                                 <div class="modal-body">
                                                     <form action="<?php echo $antiXss->xss_clean(get_config("baseurl")); ?>/index.php#register"
                                                           method="post">
+                                                              <?php echo csrf_field(); ?>
                                                         <?php if (get_config('battlenet_support')) { ?>
                                                             <div class="input-group">
                                                                 <span class="input-group"><?php elang('email'); ?></span>
@@ -504,6 +509,7 @@ require_once 'header.php'; ?>
             <!-- Modal body -->
             <div class="modal-body">
                 <form action="" method="post">
+                    <?php echo csrf_field(); ?>
                     <div class="form-group">
                         <label for="lang"><?php elang('change_lang_form_head'); ?></label>
                         <select class="form-control" id="langchange" name="langchange">
