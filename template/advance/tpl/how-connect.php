@@ -1,45 +1,11 @@
-<?php
-/**
- * Created by Amin.MasterkinG
- * Website : MasterkinG32.CoM
- * Email : lichwow_masterking@yahoo.com
- * Date: 04/02/2020 - 6:55 PM
- */
-?>
-<section id="connect" class="services">
+<section id="connect" class="connect-section">
     <div class="container">
-        <div class="section-title" data-aos="fade-up">
-            <h2><?php elang('how_to_connect'); ?></h2>
-            <p><?php elang('realmlist'); ?>/<?php elang('realmlist'); ?>:
-                <code><?php echo strtoupper(get_config('realmlist')); ?></code></p>
-        </div>
-        <div class="row">
-            <div class="col-lg-6 order-2 order-lg-1">
-                <div class="icon-box mt-5 mt-lg-0" data-aos="fade-up">
-                    <i class="bx bx-user-plus"></i>
-                    <h4><?php elang('create_account'); ?></h4>
-                    <p><?php elang('create_account_tip1'); ?>.</p>
-                </div>
-                <div class="icon-box mt-5" data-aos="fade-up" data-aos-delay="100">
-                    <i class="bx bx-download"></i>
-                    <h4><?php elang('download_game'); ?></h4>
-                    <p><?php elang('create_account_tip2'); ?></p>
-                </div>
-                <div class="icon-box mt-5" data-aos="fade-up" data-aos-delay="200">
-                    <i class="bx bx-game"></i>
-                    <h4><?php elang('setup_game'); ?></h4>
-                    <p><?php elang('create_account_tip3'); ?></p>
-                </div>
-                <div class="icon-box mt-5" data-aos="fade-up" data-aos-delay="300">
-                    <i class="bx bx-server"></i>
-                    <h4><?php elang('change_server_address'); ?></h4>
-                    <p><?php elang('create_account_tip4'); ?>
-                        <code><?php echo strtoupper(get_config('realmlist')); ?></code></p>
-                </div>
-            </div>
-            <div class="image col-lg-6 order-1 order-lg-2"
-                 style='background-image: url("<?php echo $antiXss->xss_clean(get_config("baseurl")); ?>/template/<?php echo $antiXss->xss_clean(get_config("template")); ?>/assets/img/sylvanas.png");background-size: auto 100%;background-position: center;background-repeat: no-repeat;'
-                 data-aos="fade-left" data-aos-delay="100"></div>
-        </div>
+        <div class="section-heading"><div><span class="eyebrow">Your journey starts here</span><h2>Back to Azeroth.<br>In three simple steps.</h2></div><p>A familiar world is waiting on the other side.<br>Let’s get you there.</p></div>
+        <ol class="connect-steps">
+            <li><span class="step-number">01</span><svg class="step-icon icon" aria-hidden="true"><use href="#icon-key"/></svg><h3>Claim your seat</h3><p>Create your game account<?php echo $registrationRequiresInvite ? ' with your invite code' : ''; ?>. Keep your <?php echo get_config('battlenet_support') ? 'email address' : 'username'; ?> handy — you’ll use it to log in to the game.</p><a href="<?php echo $escape(gg_url('register')); ?>" class="text-link">Create an account <span aria-hidden="true">↗</span></a></li>
+            <li><span class="step-number">02</span><svg class="step-icon icon" aria-hidden="true"><use href="#icon-sword"/></svg><h3>Ready your client</h3><p>Use a clean Wrath of the Lich King <strong><?php echo $escape(get_config('game_version')); ?></strong> client. Close the game before changing your connection settings.</p><span class="step-tip">Already have the right client? You’re ready.</span></li>
+            <li><span class="step-number">03</span><svg class="step-icon icon" aria-hidden="true"><use href="#icon-globe"/></svg><h3>Make yourself at home</h3><p>Open <code>Data/enUS/realmlist.wtf</code> (or your client’s language folder), replace its contents with the line below, then launch <code>Wow.exe</code>.</p><div class="realmlist-copy"><code id="realmlist-command">set realmlist <?php echo $escape(get_config('realmlist')); ?></code><button type="button" class="copy-button" data-copy-target="realmlist-command" aria-label="Copy realmlist"><svg class="icon" aria-hidden="true"><use href="#icon-copy"/></svg><span class="copy-label">Copy</span></button></div><span class="step-tip"><?php echo get_config('battlenet_support') ? 'Log in with your account email address.' : 'Log in with your game username, not your email.'; ?></span></li>
+        </ol>
+        <p id="copy-feedback" class="sr-only" role="status" aria-live="polite"></p>
     </div>
 </section>

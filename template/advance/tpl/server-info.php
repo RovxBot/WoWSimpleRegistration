@@ -1,40 +1,23 @@
-<?php
-/**
- * Created by Amin.MasterkinG
- * Website : MasterkinG32.CoM
- * Email : lichwow_masterking@yahoo.com
- * Date: 04/02/2020 - 6:55 PM
- */
-?>
-    <section id="about" class="about">
-        <div class="container">
-            <div class="section-title" data-aos="fade-up">
-                <h2><?php elang('about_server'); ?></h2>
-                <p><?php elang('game_version'); ?>: <b><span style="color: #007a0c"><?php echo get_config('game_version'); ?></span></b>
-                </p>
-            </div>
-            <div class="row">
-                <div class="col-lg-6" data-aos="fade-right">
-                    <div class="image">
-                        <img src="<?php echo $antiXss->xss_clean(get_config("baseurl")); ?>/template/<?php echo $antiXss->xss_clean(get_config("template")); ?>/assets/img/jaina.png"
-                             class="img-fluid" alt="">
-                    </div>
-                </div>
-                <div class="col-lg-6" data-aos="fade-left">
-                    <div class="content pt-4 pt-lg-0 pl-0 pl-lg-3 ">
-                        <h3><?php elang('server_information'); ?>:</h3>
-                        <ul>
-                            <li><i class="bx bx-check-double"></i><?php elang('server_type'); ?>: <b>AzerothCore WotLK</b></li>
-                            <li><i class="bx bx-check-double"></i><?php elang('realmlist'); ?>: <b><?php echo $antiXss->xss_clean(strtoupper(get_config('realmlist'))); ?></b></li>
-                            <li><i class="bx bx-check-double"></i><?php elang('xp_rate'); ?>: <b>x1 with double XP weekends</b></li>
-                            <li><i class="bx bx-check-double"></i><?php elang('drop_rate'); ?>: <b>x1</b></li>
-                            <li><i class="bx bx-check-double"></i><?php elang('start_level'); ?>: <b>1</b></li>
-                            <li><i class="bx bx-check-double"></i><?php elang('max_level'); ?>: <b>80</b></li>
-                            <li><i class="bx bx-check-double"></i><?php echo $antiXss->xss_clean(lang_or('grim_token_shop', 'Grim Token Shop')); ?>: <b>Character services</b></li>
-                            <li><i class="bx bx-check-double"></i>Registration: <b>Invite code required</b></li>
-                        </ul>
-                    </div>
-                </div>
+<section id="about" class="realm-section">
+    <div class="container">
+        <div class="realm-heading">
+            <div><span class="eyebrow">Welcome to Grim Guzzler</span><h2>The world you remember.<br>The home you make.</h2></div>
+            <p>From your first steps in Azeroth to the frozen heart of Icecrown, the journey is better together. Pull up a chair. There’s always another story to tell.</p>
+        </div>
+        <div class="realm-overview">
+            <div class="realm-landscape"><div class="landscape-caption"><span class="eyebrow">Rediscover the adventure</span><h3>Northrend is calling.</h3><a href="#connect" class="text-link">Answer the call <span aria-hidden="true">↗</span></a></div></div>
+            <div class="realm-details">
+                <span class="eyebrow">The realm, at a glance</span>
+                <h3>A little nostalgia.<br>A lot of adventure.</h3>
+                <dl class="realm-specs">
+                    <div><dt>Expansion</dt><dd>Wrath of the Lich King</dd></div>
+                    <div><dt>Experience</dt><dd>1× <span>· 2× on weekends</span></dd></div>
+                    <div><dt>Drop rate</dt><dd>1×</dd></div>
+                    <div><dt>Your journey</dt><dd>Level 1 → 80</dd></div>
+                    <div><dt>Powered by</dt><dd>AzerothCore</dd></div>
+                </dl>
+                <?php if ($showServerData) { ?><a href="#server-status" class="text-link">Explore realm activity <span aria-hidden="true">↗</span></a><?php } ?>
             </div>
         </div>
-    </section>
+    </div>
+</section>

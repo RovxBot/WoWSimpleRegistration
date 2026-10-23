@@ -42,6 +42,7 @@ require_once app_path . 'include/user.php';
 require_once app_path . 'include/store.php';
 require_once app_path . 'include/vote.php';
 require_once app_path . 'include/status.php';
+require_once app_path . 'include/realm-stats.php';
 
 $languageName = strtolower(get_config('language'));
 $languageFile = app_path . 'language/' . $languageName . '.php';

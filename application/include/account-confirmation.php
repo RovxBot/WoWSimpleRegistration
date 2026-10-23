@@ -8,15 +8,26 @@ if (!$reset && !$enable2fa) {
 $escape = static function ($value) {
     return htmlspecialchars((string) $value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 };
+$isGrimTheme = get_config('template') === 'advance';
 $maxLength = get_config('battlenet_support') && get_config('srp6_support') && get_config('srp6_version') == 2 ? 128 : 16;
 ?>
 <!doctype html>
 <html lang="en">
+<head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title><?php echo $reset ? 'Reset password' : 'Enable two-factor authentication'; ?></title>
-<body>
-<main>
+<?php if ($isGrimTheme) { ?>
+<meta name="theme-color" content="#101318">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="<?php echo $escape(rtrim((string) get_config('baseurl'), '/')); ?>/template/advance/assets/css/style.css?v=20261023-2" rel="stylesheet">
+<?php } ?>
+</head>
+<body class="account-confirmation<?php echo $isGrimTheme ? ' gg-confirmation' : ''; ?>">
+<main class="account-confirmation-panel">
+    <?php if ($isGrimTheme) { ?><a href="<?php echo $escape(get_config('baseurl')); ?>" class="confirmation-brand"><img src="<?php echo $escape(rtrim((string) get_config('baseurl'), '/')); ?>/template/advance/assets/img/grimguzzler/logo.webp" alt="Grim Guzzler" width="1324" height="1188"></a><?php } ?>
     <h1><?php echo $reset ? 'Reset password' : 'Enable two-factor authentication'; ?></h1>
     <?php error_msg(); success_msg(); ?>
     <form method="post" action="">
@@ -30,7 +41,7 @@ $maxLength = get_config('battlenet_support') && get_config('srp6_support') && ge
         <?php } else { ?>
         <p>Confirm to enable two-factor authentication for your account. Your setup key will be sent to your registered email address.</p>
         <?php } ?>
-        <button type="submit">Confirm</button>
+        <button type="submit" class="btn btn-primary">Confirm</button>
     </form>
     <p><a href="<?php echo $escape(get_config('baseurl')); ?>">Return to the website</a></p>
 </main>

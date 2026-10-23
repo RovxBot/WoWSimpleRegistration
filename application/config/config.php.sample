@@ -36,6 +36,10 @@ $config['realmlist'] = 'logon.myserver.com'; // The Realmlist of your server.
 $config['patch_location'] = 'http://mypatch.com/patch.mpq'; // URL to download the patch if available. Leave empty if not applicable.
 $config['game_version'] = '3.3.5a (12340)'; // The version of the game that your server is running.
 
+// Public realm statistics (advance theme). Values are optional in mounted configs.
+$config['realm_stats_cache_ttl'] = 30; // Public snapshots cached for 30 seconds; 0 disables caching.
+$config['realm_heartbeat_grace'] = 1200; // Offline after 20 minutes without an uptime heartbeat.
+
 /* Server Expansion Settings - Choose your server's expansion by setting the corresponding number.
 0 = Classic
 1 = The Burning Crusade (TBC)

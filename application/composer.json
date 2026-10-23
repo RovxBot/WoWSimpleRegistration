@@ -25,7 +25,10 @@
     "allow-plugins": false
   },
   "scripts": {
-    "test": "php ../tests/security.php",
+    "test": [
+      "@php ../tests/security.php",
+      "@php ../tests/realm-stats.php"
+    ],
     "lint": "@php ../tests/lint.php"
   }
 }

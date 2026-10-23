@@ -34,12 +34,14 @@ function request_http($base, $path, $post = null, $cookie = '')
 [$status, $page, $headers] = request_http($base, '/');
 $cookieHeaders = $headers;
 $headers = strtolower($headers);
-expect_http($status === 200 && str_contains($page, 'player-portal'), 'The advance theme and player login render');
+expect_http($status === 200 && str_contains($page, 'page=account'), 'The multi-page home links to the player account');
 expect_http(str_contains($headers, 'httponly') && str_contains($headers, 'samesite=lax'), 'Session cookies have browser protections');
 expect_http(str_contains($headers, 'secure'), 'HTTPS deployments mark session cookies Secure');
 expect_http(str_contains($headers, 'cache-control: no-store') && str_contains($headers, 'referrer-policy: no-referrer'), 'Account pages avoid caching and token referrer leaks');
 expect_http(str_contains($headers, 'x-frame-options: deny') && !str_contains($headers, 'x-powered-by'), 'Anti-framing and runtime disclosure protections apply');
 preg_match('/set-cookie: (PHPSESSID=[^;\r\n]+)/i', $cookieHeaders, $cookie);
+[$status, $page] = request_http($base, '/index.php?page=account', null, $cookie[1]);
+expect_http($status === 200 && str_contains($page, 'player-portal'), 'The dedicated player account page renders');
 preg_match('/name="csrf_token" value="([a-f0-9]{64})"/', $page, $csrf);
 expect_http(isset($csrf[1]), 'Forms contain a CSRF token');
 [$status] = request_http($base, '/index.php', ['submit' => 'store_checkout']);

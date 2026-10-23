@@ -1,168 +1,79 @@
-/**
-* Template Name: Knight - v2.0.0
-* Template URL: https://bootstrapmade.com/knight-free-bootstrap-theme/
-* Author: BootstrapMade.com
-* License: https://bootstrapmade.com/license/
-*/
-!(function($) {
-  "use strict";
+/* Grim Guzzler navigation, account accessibility, and connection helpers. */
+(function () {
+  'use strict';
 
-  // Smooth scroll for the navigation menu and links with .scrollto classes
-  $(document).on('click', '.nav-menu a, .mobile-nav a, .scrollto', function(e) {
-    if (location.pathname.replace(/^\//, '') == this.pathname.replace(/^\//, '') && location.hostname == this.hostname) {
-      e.preventDefault();
-      var target = $(this.hash);
-      if (target.length) {
-
-        var scrollto = target.offset().top + 2;
-
-        if ($('#header').length) {
-          scrollto -= $('#header').outerHeight()
-
-        }
-
-        if ($(this).attr("href") == '#header') {
-          scrollto = 0;
-        }
-
-        $('html, body').animate({
-          scrollTop: scrollto
-        }, 1500, 'easeInOutExpo');
-
-        if ($(this).parents('.nav-menu, .mobile-nav').length) {
-          $('.nav-menu .active, .mobile-nav .active').removeClass('active');
-          $(this).closest('li').addClass('active');
-        }
-
-        if ($('body').hasClass('mobile-nav-active')) {
-          $('body').removeClass('mobile-nav-active');
-          $('.mobile-nav-toggle i').toggleClass('icofont-navigation-menu icofont-close');
-          $('.mobile-nav-overly').fadeOut();
-        }
-        return false;
-      }
-    }
-  });
-
-  // Mobile Navigation
-  if ($('.nav-menu').length) {
-    var $mobile_nav = $('.nav-menu').clone().prop({
-      class: 'mobile-nav d-lg-none'
+  const toggle = document.querySelector('.menu-toggle');
+  const navigation = document.querySelector('.site-navigation');
+  const closeMenu = function (restoreFocus) {
+    if (!toggle || !navigation) return;
+    const wasOpen = toggle.getAttribute('aria-expanded') === 'true';
+    toggle.setAttribute('aria-expanded', 'false');
+    navigation.classList.remove('is-open');
+    if (restoreFocus && wasOpen) toggle.focus();
+  };
+  if (toggle && navigation) {
+    toggle.addEventListener('click', function () {
+      const isOpen = toggle.getAttribute('aria-expanded') !== 'true';
+      toggle.setAttribute('aria-expanded', String(isOpen));
+      navigation.classList.toggle('is-open', isOpen);
     });
-    $('body').append($mobile_nav);
-    $('.mobile-nav .nav-logo').remove();
-    $('body').prepend('<button type="button" class="mobile-nav-toggle d-lg-none"><i class="icofont-navigation-menu"></i></button>');
-    $('body').append('<div class="mobile-nav-overly"></div>');
-
-    $(document).on('click', '.mobile-nav-toggle', function(e) {
-      $('body').toggleClass('mobile-nav-active');
-      $('.mobile-nav-toggle i').toggleClass('icofont-navigation-menu icofont-close');
-      $('.mobile-nav-overly').toggle();
+    navigation.addEventListener('click', function (event) {
+      if (event.target.closest('a, .language-toggle')) closeMenu(false);
     });
-
-    $(document).on('click', '.mobile-nav .drop-down > a', function(e) {
-      e.preventDefault();
-      $(this).next().slideToggle(300);
-      $(this).parent().toggleClass('active');
+    document.addEventListener('click', function (event) {
+      if (!event.target.closest('.site-header')) closeMenu(false);
     });
-
-    $(document).click(function(e) {
-      var container = $(".mobile-nav, .mobile-nav-toggle");
-      if (!container.is(e.target) && container.has(e.target).length === 0) {
-        if ($('body').hasClass('mobile-nav-active')) {
-          $('body').removeClass('mobile-nav-active');
-          $('.mobile-nav-toggle i').toggleClass('icofont-navigation-menu icofont-close');
-          $('.mobile-nav-overly').fadeOut();
-        }
-      }
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape') closeMenu(true);
     });
-  } else if ($(".mobile-nav, .mobile-nav-toggle").length) {
-    $(".mobile-nav, .mobile-nav-toggle").hide();
+    window.matchMedia('(min-width: 992px)').addEventListener('change', function (event) {
+      if (event.matches) closeMenu(false);
+    });
   }
 
-  // Navigation active state on scroll
-  var nav_sections = $('section');
-  var main_nav = $('.nav-menu, #mobile-nav');
-
-  $(window).on('scroll', function() {
-    var cur_pos = $(this).scrollTop() + 110;
-
-    nav_sections.each(function() {
-      var top = $(this).offset().top,
-        bottom = top + $(this).outerHeight();
-
-      if (cur_pos >= top && cur_pos <= bottom) {
-        if (cur_pos <= bottom) {
-          main_nav.find('li').removeClass('active');
+  document.querySelectorAll('[data-copy-target]').forEach(function (button) {
+    button.addEventListener('click', async function () {
+      const target = document.getElementById(button.dataset.copyTarget);
+      const feedback = document.getElementById('copy-feedback');
+      if (!target) return;
+      const command = target.textContent.trim();
+      try {
+        if (!navigator.clipboard || !window.isSecureContext) throw new Error('Clipboard unavailable');
+        await navigator.clipboard.writeText(command);
+        const label = button.querySelector('.copy-label');
+        if (label) label.textContent = 'Copied';
+        button.setAttribute('aria-label', 'Realmlist copied');
+        if (feedback) feedback.textContent = 'Realmlist command copied to clipboard.';
+        window.setTimeout(function () {
+          if (label) label.textContent = 'Copy';
+          button.setAttribute('aria-label', 'Copy realmlist');
+        }, 2500);
+      } catch (_) {
+        const range = document.createRange();
+        range.selectNodeContents(target);
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+        if (feedback) {
+          feedback.classList.remove('sr-only');
+          feedback.textContent = 'The realmlist command is selected. Use your device’s copy command to copy it.';
         }
-        main_nav.find('a[href="#' + $(this).attr('id') + '"]').parent('li').addClass('active');
       }
     });
   });
 
-  // Stick the header at top on scroll
-  $("#header").sticky({
-    topSpacing: 0,
-    zIndex: '50'
-  });
-
-  // Back to top button
-  $(window).scroll(function() {
-    if ($(this).scrollTop() > 100) {
-      $('.back-to-top').fadeIn('slow');
-    } else {
-      $('.back-to-top').fadeOut('slow');
+  // CAPTCHA and confirmation fields also come from shared backend helpers.
+  document.querySelectorAll('input:not([type="hidden"]), select').forEach(function (input) {
+    if (!input.labels.length && !input.hasAttribute('aria-label')) {
+      input.setAttribute('aria-label', input.placeholder || input.name.replace(/_/g, ' '));
     }
   });
 
-  $('.back-to-top').click(function() {
-    $('html, body').animate({
-      scrollTop: 0
-    }, 1500, 'easeInOutExpo');
-    return false;
-  });
-
-  // Porfolio isotope and filter
-  $(window).on('load', function() {
-    var portfolioIsotope = $('.portfolio-container').isotope({
-      itemSelector: '.portfolio-item',
-      layoutMode: 'fitRows'
-    });
-
-    $('#portfolio-flters li').on('click', function() {
-      $("#portfolio-flters li").removeClass('filter-active');
-      $(this).addClass('filter-active');
-
-      portfolioIsotope.isotope({
-        filter: $(this).data('filter')
-      });
-    });
-
-    // Initiate venobox (lightbox feature used in portofilo)
-    $(document).ready(function() {
-      $('.venobox').venobox();
-    });
-  });
-
-  // Testimonials carousel (uses the Owl Carousel library)
-  $(".testimonials-carousel").owlCarousel({
-    autoplay: true,
-    dots: true,
-    loop: true,
-    items: 1
-  });
-
-  // Portfolio details carousel
-  $(".portfolio-details-carousel").owlCarousel({
-    autoplay: true,
-    dots: true,
-    loop: true,
-    items: 1
-  });
-
-  // Initi AOS
-  AOS.init({
-    duration: 600
-  });
-
-})(jQuery);
+  // Translate legacy section links into the corresponding dedicated page.
+  const legacyPages = { '#about': 'status', '#connect': 'play', '#register': 'register', '#player-portal': 'account', '#server-status': 'status', '#why-us': 'support', '#faq': 'support', '#contact': 'support' };
+  const current = new URL(window.location.href);
+  if (!current.searchParams.has('page') && legacyPages[current.hash]) {
+    current.searchParams.set('page', legacyPages[current.hash]);
+    window.location.replace(current.href);
+  }
+})();
