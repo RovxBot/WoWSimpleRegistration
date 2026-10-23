@@ -34,7 +34,15 @@ Optional configuration keys are `realm_stats_cache_ttl` (default 30), `realm_sta
 
 Registration, shared invitation checks, authentication, CAPTCHA, token inventory, service catalogs, SOAP checkout, and order handling retain their existing contracts. Forms return to their dedicated pages; old POST targets are routed to the appropriate account or registration page. Feature visibility switches and Battle.net identity fields remain supported. Password-reset and 2FA confirmations use the same branding.
 
-No production source was uploaded and no account actions or purchases were executed. The website still deploys through its existing image-build and GitOps workflow, including its patched PHP requirement. Nothing has been committed, pushed, built into a production image, or deployed.
+No production source was uploaded through the verification tools and no account actions or purchases were executed. The website deploys through its existing image-build and GitOps workflow, including its patched PHP requirement. Source changes take effect after the corresponding image build and deployment rollout.
+
+## Selecting the redesigned Advance theme
+
+The registration image packages every theme; PHP selects one at runtime. The production Deployment already sets `TEMPLATE=advance`, and the mounted ConfigMap reads that value. A read-only pod check confirmed both the environment and resolved configuration select `advance`, but the running image does not yet contain the redesigned raid page or tavern artwork.
+
+The app sample config, registration image environment, and ConfigMap fallback now all default to `advance`. The image build fails if any redesigned page, statistics/catalog file, shared page helper, or supplied WebP asset is missing. Both workflow smoke tests require the Advance default and redesigned files. The workflow logs the exact website Git commit cloned from `RovxBot/WoWSimpleRegistration` at `master`, and includes that commit in its run summary. Image tags use the infrastructure commit, so the run summary identifies the separate website revision.
+
+To release this version, push the app changes to the configured source ref and the infrastructure changes to the workflow branch, run **Build Grim Guzzler registration image**, and merge its deployment-image pull request after checks pass. A new workflow run uses the remote source checkout; local unpushed edits are not included. The website image rollout is separate from the worldserver rebuild needed for Classic/TBC collection.
 
 ## Classic and TBC collection
 
